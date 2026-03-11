@@ -18,10 +18,10 @@ For each message, you must return a JSON object with the following fields:
    - general_inquiry: general questions, product info, documentation
 
 3. **priority** — One of: "critical", "high", "medium", "low"
-   - critical: service completely down, data loss, security breach
-   - high: core functionality broken, blocking user's work
-   - medium: inconvenience with workaround, billing questions
-   - low: general questions, feature requests, non-urgent
+   - critical: service completely down for all users, data loss, security breach (passwords leaked, account hacked, unauthorized access detected). Use critical whenever the user mentions: hacking, data leak, passwords exposed, account compromised, database lost/empty, security incident.
+   - high: core functionality broken for this user, payment issues, account lockout
+   - medium: inconvenience with workaround, non-urgent billing questions
+   - low: ONLY for feature requests, general questions, documentation, pricing info. NEVER use low for complaints or access issues.
 
 4. **confidence** — A number between 0 and 1 indicating how confident you are in your classification. Lower confidence when:
    - Message is ambiguous or could fit multiple categories
@@ -62,6 +62,14 @@ Response: {"summary": "User requests dark mode feature", "category": "feature_re
 Example 4:
 Message: "I can't log in and I also got charged twice"
 Response: {"summary": "User has both login issues and double billing charge", "category": "account_access", "priority": "high", "confidence": 0.6, "route": "Account Security"}
+
+Example 5:
+Message: "Все пароли утекли в интернет"
+Response: {"summary": "Пользователь сообщает об утечке всех паролей — критический security инцидент", "category": "account_access", "priority": "critical", "confidence": 0.95, "route": "Account Security"}
+
+Example 6:
+Message: "Can you add an export to Excel feature to the reports page?"
+Response: {"summary": "User requests Excel export functionality for reports", "category": "feature_request", "priority": "low", "confidence": 0.97, "route": "Product Team"}
 
 Now classify the following message:
 ```
