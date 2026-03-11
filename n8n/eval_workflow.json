@@ -1,0 +1,117 @@
+{
+  "name": "Triage Bot — Eval Runner",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "node-manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {json: {id:1,language:'RU',message:'Мне дважды списали деньги за подписку в этом месяце. Верните деньги!',expected_category:'billing',expected_priority:'high',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:2,language:'EN',message:'I was charged twice this month for my subscription. Please refund.',expected_category:'billing',expected_priority:'high',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:3,language:'RU',message:'Как мне отменить подписку и получить возврат за оставшиеся дни?',expected_category:'billing',expected_priority:'medium',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:4,language:'EN',message:'My invoice shows a charge I do not recognize. Can you explain?',expected_category:'billing',expected_priority:'high',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:5,language:'RU',message:'Не могу привязать новую карту для оплаты',expected_category:'billing',expected_priority:'medium',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:6,language:'EN',message:'I need a VAT invoice for my company accounting department',expected_category:'billing',expected_priority:'medium',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:7,language:'RU',message:'Мой промокод не применяется при оформлении подписки',expected_category:'billing',expected_priority:'medium',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:8,language:'RU',message:'Вы сняли деньги а доступ к аккаунту не открылся уже 3 часа',expected_category:'billing',expected_priority:'high',expected_route:'Billing Team',expected_needs_review:false}},\n  {json: {id:9,language:'EN',message:'The dashboard keeps showing a blank page after the latest update',expected_category:'technical_issue',expected_priority:'high',expected_route:'Engineering Support',expected_needs_review:false}},\n  {json: {id:10,language:'RU',message:'Приложение вылетает каждый раз когда пытаюсь загрузить файл',expected_category:'technical_issue',expected_priority:'high',expected_route:'Engineering Support',expected_needs_review:false}},\n  {json: {id:11,language:'EN',message:'The export feature is broken - I get error 500 every time',expected_category:'technical_issue',expected_priority:'high',expected_route:'Engineering Support',expected_needs_review:false}},\n  {json: {id:12,language:'RU',message:'Сайт работает очень медленно последние несколько дней',expected_category:'technical_issue',expected_priority:'medium',expected_route:'Engineering Support',expected_needs_review:false}},\n  {json: {id:13,language:'EN',message:'Bug: when I click save the form resets instead of saving data',expected_category:'technical_issue',expected_priority:'high',expected_route:'Engineering Support',expected_needs_review:false}},\n  {json: {id:14,language:'RU',message:'Интеграция со Slack перестала работать после вчерашнего обновления',expected_category:'technical_issue',expected_priority:'high',expected_route:'Engineering Support',expected_needs_review:false}},\n  {json: {id:15,language:'EN',message:'ALL OUR DATA IS GONE after the migration! The database shows empty!',expected_category:'technical_issue',expected_priority:'critical',expected_route:'Engineering Support',expected_needs_review:true}},\n  {json: {id:16,language:'RU',message:'Иногда уведомления не приходят но не всегда. Не критично.',expected_category:'technical_issue',expected_priority:'medium',expected_route:'Engineering Support',expected_needs_review:false}},\n  {json: {id:17,language:'RU',message:'Не могу войти в аккаунт забыл пароль',expected_category:'account_access',expected_priority:'medium',expected_route:'Account Security',expected_needs_review:false}},\n  {json: {id:18,language:'EN',message:'My account has been locked after too many failed login attempts',expected_category:'account_access',expected_priority:'high',expected_route:'Account Security',expected_needs_review:false}},\n  {json: {id:19,language:'RU',message:'Двухфакторная аутентификация перестала работать на моём телефоне',expected_category:'account_access',expected_priority:'high',expected_route:'Account Security',expected_needs_review:false}},\n  {json: {id:20,language:'EN',message:'I got unexpectedly logged out and now the login page shows an error',expected_category:'account_access',expected_priority:'medium',expected_route:'Account Security',expected_needs_review:false}},\n  {json: {id:21,language:'RU',message:'Кто-то взломал мой аккаунт! Вижу входы из другой страны!',expected_category:'account_access',expected_priority:'critical',expected_route:'Account Security',expected_needs_review:true}},\n  {json: {id:22,language:'EN',message:'How do I transfer account ownership to a colleague who is taking over?',expected_category:'account_access',expected_priority:'medium',expected_route:'Account Security',expected_needs_review:false}},\n  {json: {id:23,language:'EN',message:'Our company SSO integration stopped working this morning for all users',expected_category:'account_access',expected_priority:'high',expected_route:'Account Security',expected_needs_review:false}},\n  {json: {id:24,language:'RU',message:'Заблокировали аккаунт за нарушение правил но я ничего не нарушал',expected_category:'account_access',expected_priority:'high',expected_route:'Account Security',expected_needs_review:false}},\n  {json: {id:25,language:'EN',message:'Can you add dark mode to the interface?',expected_category:'feature_request',expected_priority:'low',expected_route:'Product Team',expected_needs_review:false}},\n  {json: {id:26,language:'RU',message:'Хотелось бы иметь мобильное приложение для iOS и Android',expected_category:'feature_request',expected_priority:'low',expected_route:'Product Team',expected_needs_review:false}},\n  {json: {id:27,language:'EN',message:'Please add the ability to export reports to Excel format',expected_category:'feature_request',expected_priority:'low',expected_route:'Product Team',expected_needs_review:false}},\n  {json: {id:28,language:'RU',message:'Можете добавить интеграцию с Notion?',expected_category:'feature_request',expected_priority:'low',expected_route:'Product Team',expected_needs_review:false}},\n  {json: {id:29,language:'EN',message:'We need API access for enterprise automation - this is blocking our whole team',expected_category:'feature_request',expected_priority:'medium',expected_route:'Product Team',expected_needs_review:false}},\n  {json: {id:30,language:'RU',message:'Не хватает функции совместного редактирования документов в реальном времени',expected_category:'feature_request',expected_priority:'low',expected_route:'Product Team',expected_needs_review:false}},\n  {json: {id:31,language:'EN',message:'Please add keyboard shortcuts for power users to speed up workflow',expected_category:'feature_request',expected_priority:'low',expected_route:'Product Team',expected_needs_review:false}},\n  {json: {id:32,language:'RU',message:'Поддержка отвечает слишком долго. Жду ответа уже 3 дня.',expected_category:'complaint',expected_priority:'medium',expected_route:'Customer Success',expected_needs_review:false}},\n  {json: {id:33,language:'EN',message:'Your service went down 3 times this week. This is completely unacceptable.',expected_category:'complaint',expected_priority:'high',expected_route:'Customer Success',expected_needs_review:false}},\n  {json: {id:34,language:'RU',message:'Я очень разочарован качеством вашего продукта за последний месяц',expected_category:'complaint',expected_priority:'medium',expected_route:'Customer Success',expected_needs_review:false}},\n  {json: {id:35,language:'EN',message:'I am cancelling my subscription because your customer service is terrible',expected_category:'complaint',expected_priority:'high',expected_route:'Customer Success',expected_needs_review:false}},\n  {json: {id:36,language:'RU',message:'Это недопустимо! Ваши постоянные сбои сорвали мою презентацию перед клиентами',expected_category:'complaint',expected_priority:'high',expected_route:'Customer Success',expected_needs_review:false}},\n  {json: {id:37,language:'EN',message:'I have been a loyal customer for 3 years and this is how you treat me?',expected_category:'complaint',expected_priority:'medium',expected_route:'Customer Success',expected_needs_review:false}},\n  {json: {id:38,language:'RU',message:'Ваш продукт совсем не соответствует тому что написано на вашем сайте',expected_category:'complaint',expected_priority:'medium',expected_route:'Customer Success',expected_needs_review:false}},\n  {json: {id:39,language:'EN',message:'What are your customer support business hours?',expected_category:'general_inquiry',expected_priority:'low',expected_route:'General Support',expected_needs_review:false}},\n  {json: {id:40,language:'RU',message:'Как добавить нового пользователя в командный аккаунт?',expected_category:'general_inquiry',expected_priority:'low',expected_route:'General Support',expected_needs_review:false}},\n  {json: {id:41,language:'EN',message:'Do you offer a free trial for the Pro plan?',expected_category:'general_inquiry',expected_priority:'low',expected_route:'General Support',expected_needs_review:false}},\n  {json: {id:42,language:'RU',message:'Есть ли у вас документация по REST API?',expected_category:'general_inquiry',expected_priority:'low',expected_route:'General Support',expected_needs_review:false}},\n  {json: {id:43,language:'EN',message:'What is the difference between the Basic and Pro subscription plans?',expected_category:'general_inquiry',expected_priority:'low',expected_route:'General Support',expected_needs_review:false}},\n  {json: {id:44,language:'RU',message:'Соответствует ли ваш продукт требованиям GDPR и где найти DPA?',expected_category:'general_inquiry',expected_priority:'medium',expected_route:'General Support',expected_needs_review:false}},\n  {json: {id:45,language:'EN',message:'How do I connect your service to Zapier for automation?',expected_category:'general_inquiry',expected_priority:'low',expected_route:'General Support',expected_needs_review:false}},\n  {json: {id:46,language:'EN',message:'I cannot log in and I also got charged twice this month',expected_category:'account_access',expected_priority:'high',expected_route:'Account Security',expected_needs_review:true,edge_case:'multi-topic'}},\n  {json: {id:47,language:'RU',message:'Помогите',expected_category:'general_inquiry',expected_priority:'low',expected_route:'General Support',expected_needs_review:true,edge_case:'very-short'}},\n  {json: {id:48,language:'EN',message:'It does not work',expected_category:'technical_issue',expected_priority:'medium',expected_route:'Engineering Support',expected_needs_review:true,edge_case:'vague'}},\n  {json: {id:49,language:'RU',message:'Всё сломалось',expected_category:'technical_issue',expected_priority:'medium',expected_route:'Engineering Support',expected_needs_review:true,edge_case:'vague'}},\n  {json: {id:50,language:'EN',message:'I am really frustrated and not happy with the service at all',expected_category:'complaint',expected_priority:'medium',expected_route:'Customer Success',expected_needs_review:true,edge_case:'ambiguous'}}\n];"
+      },
+      "id": "node-test-cases",
+      "name": "Code — Test Cases",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepseek.com/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.DEEPSEEK_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"deepseek-chat\",\n  \"max_tokens\": 300,\n  \"temperature\": 0,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a customer support triage assistant. Return a JSON object with: summary (1-2 sentences in same language as message), category (one of: billing, technical_issue, account_access, feature_request, complaint, general_inquiry), priority (critical/high/medium/low), confidence (0-1), route (Billing Team / Engineering Support / Account Security / Product Team / Customer Success / General Support). Respond ONLY with valid JSON.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.message) }}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "node-deepseek-eval",
+      "name": "DeepSeek API — Eval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const testCase = $('Code — Test Cases').item.json;\nconst rawContent = $json.choices[0].message.content;\n\nlet actual;\ntry {\n  // Strip markdown code blocks if present\n  const cleaned = rawContent.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  actual = JSON.parse(cleaned);\n} catch(e) {\n  return [{ json: {\n    id: testCase.id,\n    language: testCase.language,\n    message: testCase.message,\n    expected_category: testCase.expected_category,\n    expected_priority: testCase.expected_priority,\n    expected_route: testCase.expected_route,\n    expected_needs_review: testCase.expected_needs_review,\n    actual_category: 'PARSE_ERROR',\n    actual_priority: 'PARSE_ERROR',\n    actual_route: 'PARSE_ERROR',\n    actual_confidence: 0,\n    actual_needs_review: true,\n    category_correct: false,\n    priority_correct: false,\n    route_correct: false,\n    needs_review_correct: false,\n    notes: 'Parse error: ' + rawContent.substring(0, 100)\n  }}];\n}\n\nconst needsReview = actual.priority === 'critical' || actual.confidence < 0.8;\nconst catCorrect = actual.category === testCase.expected_category;\nconst priCorrect = actual.priority === testCase.expected_priority;\nconst routeCorrect = actual.route === testCase.expected_route;\nconst reviewCorrect = needsReview === testCase.expected_needs_review;\n\nreturn [{ json: {\n  id: testCase.id,\n  language: testCase.language,\n  message: testCase.message,\n  expected_category: testCase.expected_category,\n  expected_priority: testCase.expected_priority,\n  expected_route: testCase.expected_route,\n  expected_needs_review: testCase.expected_needs_review,\n  actual_category: actual.category || 'null',\n  actual_priority: actual.priority || 'null',\n  actual_route: actual.route || 'null',\n  actual_confidence: actual.confidence || 0,\n  actual_needs_review: needsReview,\n  category_correct: catCorrect,\n  priority_correct: priCorrect,\n  route_correct: routeCorrect,\n  needs_review_correct: reviewCorrect,\n  notes: testCase.edge_case || ''\n}}];"
+      },
+      "id": "node-compare",
+      "name": "Code — Compare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Eval Results"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        }
+      },
+      "id": "node-sheets-eval",
+      "name": "Google Sheets — Eval Results",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [880, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Code — Test Cases", "type": "main", "index": 0}]]
+    },
+    "Code — Test Cases": {
+      "main": [[{"node": "DeepSeek API — Eval", "type": "main", "index": 0}]]
+    },
+    "DeepSeek API — Eval": {
+      "main": [[{"node": "Code — Compare", "type": "main", "index": 0}]]
+    },
+    "Code — Compare": {
+      "main": [[{"node": "Google Sheets — Eval Results", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "tags": [{"name": "eval", "id": "tag-eval"}],
+  "pinData": {},
+  "versionId": "1.0.0"
+}

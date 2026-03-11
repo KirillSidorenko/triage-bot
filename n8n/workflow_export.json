@@ -1,0 +1,664 @@
+{
+  "name": "Triage Bot — Customer Support AI",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"]
+      },
+      "id": "node-telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "text",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "sender",
+              "name": "sender",
+              "value": "={{ $json.message.from.username || $json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "sender_id",
+              "name": "sender_id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "number"
+            },
+            {
+              "id": "chat_id",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "number"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ new Date($json.message.date * 1000).toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "received_at_ms",
+              "name": "received_at_ms",
+              "value": "={{ Date.now() }}",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "id": "node-normalize",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "combinator": "and"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "leftValue": "={{ $json.text.length }}",
+              "rightValue": 4000,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "type": "SystemMessagePromptTemplate",
+              "message": {
+                "values": {
+                  "string": "You are a customer support triage assistant. Your job is to analyze incoming customer messages and provide structured classification.\n\nFor each message, you must return a JSON object with the following fields:\n\n1. summary — A concise 1-2 sentence summary of the customer's issue in the same language as the original message.\n\n2. category — Exactly one of: \"billing\", \"technical_issue\", \"account_access\", \"feature_request\", \"complaint\", \"general_inquiry\"\n   - billing: payment, invoices, subscriptions, refunds, pricing\n   - technical_issue: bugs, errors, broken functionality, performance problems\n   - account_access: login problems, password reset, 2FA, account lockout\n   - feature_request: new feature suggestions, improvement ideas\n   - complaint: service quality complaints, negative experience, frustration about support\n   - general_inquiry: general questions, product info, documentation\n\n3. priority — One of: \"critical\", \"high\", \"medium\", \"low\"\n   - critical: service completely down, data loss, security breach\n   - high: core functionality broken, blocking user's work\n   - medium: inconvenience with workaround, billing questions\n   - low: general questions, feature requests, non-urgent\n\n4. confidence — A number between 0 and 1 indicating how confident you are in your classification. Lower confidence when:\n   - Message is ambiguous or could fit multiple categories\n   - Message is very short or lacks context\n   - Message contains multiple unrelated issues\n   - Emotional tone makes it hard to identify the core issue\n\n5. route — The team to route to, based on category:\n   - billing → \"Billing Team\"\n   - technical_issue → \"Engineering Support\"\n   - account_access → \"Account Security\"\n   - feature_request → \"Product Team\"\n   - complaint → \"Customer Success\"\n   - general_inquiry → \"General Support\"\n\nHere are examples of correct classifications:\n\nExample 1:\nMessage: Мне второй раз списали деньги за подписку в этом месяце. Верните деньги!\nResponse: {\"summary\": \"Клиенту дважды списали оплату за подписку, требует возврат\", \"category\": \"billing\", \"priority\": \"high\", \"confidence\": 0.95, \"route\": \"Billing Team\"}\n\nExample 2:\nMessage: The dashboard keeps showing a blank page after the latest update. I tried clearing cache and different browsers.\nResponse: {\"summary\": \"Dashboard shows blank page after update, persists across browsers and cache clearing\", \"category\": \"technical_issue\", \"priority\": \"high\", \"confidence\": 0.92, \"route\": \"Engineering Support\"}\n\nExample 3:\nMessage: Can you add dark mode?\nResponse: {\"summary\": \"User requests dark mode feature\", \"category\": \"feature_request\", \"priority\": \"low\", \"confidence\": 0.95, \"route\": \"Product Team\"}\n\nExample 4:\nMessage: I cannot log in and I also got charged twice\nResponse: {\"summary\": \"User has both login issues and double billing charge\", \"category\": \"account_access\", \"priority\": \"high\", \"confidence\": 0.6, \"route\": \"Account Security\"}\n\nNow classify the following message. Respond ONLY with valid JSON. No explanations, no markdown formatting."
+                }
+              }
+            }
+          ]
+        },
+        "promptType": "define",
+        "text": {
+          "values": {
+            "string": "={{ $json.text }}"
+          }
+        }
+      },
+      "id": "node-deepseek-chain",
+      "name": "DeepSeek — Classify",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [660, -60],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "model": "deepseek-chat",
+        "options": {
+          "maxTokens": 300,
+          "temperature": 0
+        }
+      },
+      "id": "node-deepseek-model",
+      "name": "DeepSeek Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [660, 80],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "DEEPSEEK_CREDENTIAL_ID",
+          "name": "DeepSeek API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "parsed",
+              "name": "parsed",
+              "value": "={{ JSON.parse($json.text) }}",
+              "type": "object"
+            },
+            {
+              "id": "summary",
+              "name": "summary",
+              "value": "={{ JSON.parse($json.text).summary }}",
+              "type": "string"
+            },
+            {
+              "id": "category",
+              "name": "category",
+              "value": "={{ JSON.parse($json.text).category }}",
+              "type": "string"
+            },
+            {
+              "id": "priority",
+              "name": "priority",
+              "value": "={{ JSON.parse($json.text).priority }}",
+              "type": "string"
+            },
+            {
+              "id": "confidence",
+              "name": "confidence",
+              "value": "={{ JSON.parse($json.text).confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "route",
+              "name": "route",
+              "value": "={{ JSON.parse($json.text).route }}",
+              "type": "string"
+            },
+            {
+              "id": "processing_time_ms",
+              "name": "processing_time_ms",
+              "value": "={{ Date.now() - $('Normalize Input').item.json.received_at_ms }}",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "id": "node-parse",
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, -60],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "valid_category",
+              "name": "category",
+              "value": "={{ ['billing','technical_issue','account_access','feature_request','complaint','general_inquiry'].includes($json.category) ? $json.category : 'general_inquiry' }}",
+              "type": "string"
+            },
+            {
+              "id": "valid_priority",
+              "name": "priority",
+              "value": "={{ ['critical','high','medium','low'].includes($json.priority) ? $json.priority : 'medium' }}",
+              "type": "string"
+            },
+            {
+              "id": "valid_confidence",
+              "name": "confidence",
+              "value": "={{ (typeof $json.confidence === 'number' && $json.confidence >= 0 && $json.confidence <= 1) ? $json.confidence : 0.5 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true
+      },
+      "id": "node-validate-output",
+      "name": "Validate AI Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1100, -60]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "combinator": "or"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "leftValue": "={{ $json.confidence }}",
+              "rightValue": 0.8,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-confidence-check",
+      "name": "Needs Review?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, -60],
+      "notes": "Human review если: confidence < 0.8 ИЛИ priority = critical (всегда human review для critical)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Triage Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('Normalize Input').item.json.timestamp }}",
+            "sender": "={{ $('Normalize Input').item.json.sender }}",
+            "original_message": "={{ $('Normalize Input').item.json.text }}",
+            "summary": "={{ $json.summary }}",
+            "category": "={{ $json.category }}",
+            "priority": "={{ $json.priority }}",
+            "confidence": "={{ $json.confidence }}",
+            "route": "={{ $json.route }}",
+            "needs_review": "false",
+            "reviewer_decision": "",
+            "final_category": "={{ $json.category }}",
+            "processing_time_ms": "={{ $json.processing_time_ms }}"
+          }
+        }
+      },
+      "id": "node-sheets-auto",
+      "name": "Google Sheets — Auto Route",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1580, -160],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Triage Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('Normalize Input').item.json.timestamp }}",
+            "sender": "={{ $('Normalize Input').item.json.sender }}",
+            "original_message": "={{ $('Normalize Input').item.json.text }}",
+            "summary": "={{ $json.summary }}",
+            "category": "={{ $json.category }}",
+            "priority": "={{ $json.priority }}",
+            "confidence": "={{ $json.confidence }}",
+            "route": "={{ $json.route }}",
+            "needs_review": "true",
+            "reviewer_decision": "",
+            "final_category": "",
+            "processing_time_ms": "={{ $json.processing_time_ms }}"
+          }
+        }
+      },
+      "id": "node-sheets-review",
+      "name": "Google Sheets — Needs Review",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1580, 60],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Normalize Input').item.json.chat_id }}",
+        "text": "={{ '✅ Обращение принято!\\n\\n📋 Категория: ' + $json.category + '\\n⚡ Приоритет: ' + $json.priority + '\\n👥 Направлено: ' + $json.route + '\\n\\nВаше обращение обрабатывается.' }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "node-telegram-confirm-auto",
+      "name": "Telegram — Confirm (Auto)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1800, -160],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Normalize Input').item.json.chat_id }}",
+        "text": "✅ Обращение принято!\n\nВаш запрос передан на рассмотрение специалисту. Мы свяжемся с вами в ближайшее время.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "node-telegram-confirm-review",
+      "name": "Telegram — Confirm (Review)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1800, 0],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.REVIEWER_CHAT_ID }}",
+        "text": "={{ '🔍 Требуется review\\n\\nОт: ' + $('Normalize Input').item.json.sender + '\\n\\nСообщение: ' + $('Normalize Input').item.json.text + '\\n\\nAI предложил:\\n- Категория: ' + $json.category + '\\n- Приоритет: ' + $json.priority + '\\n- Confidence: ' + $json.confidence + '\\n- Summary: ' + $json.summary + (($json.priority === 'critical') ? '\\n\\n🚨 CRITICAL — требуется немедленная реакция' : '') }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "node-telegram-reviewer",
+      "name": "Telegram — Notify Reviewer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1800, 120],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "⚠️ Пожалуйста, отправьте текстовое сообщение (до 4000 символов).",
+        "additionalFields": {}
+      },
+      "id": "node-telegram-error-input",
+      "name": "Telegram — Invalid Input",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [660, 140],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Triage Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('Normalize Input').item.json.timestamp }}",
+            "sender": "={{ $('Normalize Input').item.json.sender }}",
+            "original_message": "={{ $('Normalize Input').item.json.text }}",
+            "summary": "ERROR: Failed to parse AI response",
+            "category": "general_inquiry",
+            "priority": "medium",
+            "confidence": "0",
+            "route": "General Support",
+            "needs_review": "true",
+            "reviewer_decision": "",
+            "final_category": "",
+            "processing_time_ms": "={{ Date.now() - $('Normalize Input').item.json.received_at_ms }}"
+          }
+        }
+      },
+      "id": "node-sheets-error",
+      "name": "Google Sheets — Error Fallback",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1100, 140],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Normalize Input').item.json.chat_id }}",
+        "text": "✅ Обращение принято!\n\nВаш запрос передан на рассмотрение специалисту. Мы свяжемся с вами в ближайшее время.",
+        "additionalFields": {}
+      },
+      "id": "node-telegram-error-confirm",
+      "name": "Telegram — Confirm (Error)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1320, 140],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "DeepSeek — Classify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram — Invalid Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "DeepSeek — Classify",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek — Classify": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response": {
+      "main": [
+        [
+          {
+            "node": "Validate AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets — Error Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate AI Output": {
+      "main": [
+        [
+          {
+            "node": "Needs Review?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Review?": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets — Auto Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets — Needs Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets — Auto Route": {
+      "main": [
+        [
+          {
+            "node": "Telegram — Confirm (Auto)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets — Needs Review": {
+      "main": [
+        [
+          {
+            "node": "Telegram — Confirm (Review)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram — Notify Reviewer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets — Error Fallback": {
+      "main": [
+        [
+          {
+            "node": "Telegram — Confirm (Error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    {
+      "name": "customer-support",
+      "id": "tag-1"
+    },
+    {
+      "name": "ai-triage",
+      "id": "tag-2"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1.1.0"
+}

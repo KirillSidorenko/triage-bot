@@ -1,0 +1,17 @@
+# Sensitive credentials
+n8n/client_secret*.json
+*.env
+.env.*
+
+# Claude / local tooling
+.claude/
+.playwright-mcp/
+Product-Manager-Skills/
+
+# Internal docs (not for public repo)
+docs/
+demo/
+eval/eval_results.csv
+
+# OS
+.DS_Store

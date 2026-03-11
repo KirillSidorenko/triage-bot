@@ -1,0 +1,51 @@
+id,language,message,expected_category,expected_priority,expected_route,expected_needs_review,edge_case
+1,RU,Мне дважды списали деньги за подписку в этом месяце. Верните деньги!,billing,high,Billing Team,false,
+2,EN,I was charged twice this month for my subscription. Please refund.,billing,high,Billing Team,false,
+3,RU,Как мне отменить подписку и получить возврат за оставшиеся дни?,billing,medium,Billing Team,false,
+4,EN,My invoice shows a charge I don't recognize. Can you explain?,billing,high,Billing Team,false,
+5,RU,Не могу привязать новую карту для оплаты,billing,medium,Billing Team,false,
+6,EN,I need a VAT invoice for my company's accounting department,billing,medium,Billing Team,false,
+7,RU,Мой промокод не применяется при оформлении подписки,billing,medium,Billing Team,false,
+8,RU,Вы сняли деньги а доступ к аккаунту не открылся уже 3 часа,billing,high,Billing Team,false,
+9,EN,The dashboard keeps showing a blank page after the latest update,technical_issue,high,Engineering Support,false,
+10,RU,Приложение вылетает каждый раз когда пытаюсь загрузить файл,technical_issue,high,Engineering Support,false,
+11,EN,The export feature is broken - I get error 500 every time,technical_issue,high,Engineering Support,false,
+12,RU,Сайт работает очень медленно последние несколько дней,technical_issue,medium,Engineering Support,false,
+13,EN,Bug: when I click save the form resets instead of saving data,technical_issue,high,Engineering Support,false,
+14,RU,Интеграция со Slack перестала работать после вчерашнего обновления,technical_issue,high,Engineering Support,false,
+15,EN,ALL OUR DATA IS GONE after the migration! The database shows empty!,technical_issue,critical,Engineering Support,true,critical
+16,RU,Иногда уведомления не приходят но не всегда. Не критично.,technical_issue,medium,Engineering Support,false,vague
+17,RU,Не могу войти в аккаунт забыл пароль,account_access,medium,Account Security,false,
+18,EN,My account has been locked after too many failed login attempts,account_access,high,Account Security,false,
+19,RU,Двухфакторная аутентификация перестала работать на моём телефоне,account_access,high,Account Security,false,
+20,EN,I got unexpectedly logged out and now the login page shows an error,account_access,medium,Account Security,false,
+21,RU,Кто-то взломал мой аккаунт! Вижу входы из другой страны!,account_access,critical,Account Security,true,critical
+22,EN,How do I transfer account ownership to a colleague who is taking over?,account_access,medium,Account Security,false,
+23,EN,Our company SSO integration stopped working this morning for all users,account_access,high,Account Security,false,
+24,RU,Заблокировали аккаунт за нарушение правил но я ничего не нарушал,account_access,high,Account Security,false,
+25,EN,Can you add dark mode to the interface?,feature_request,low,Product Team,false,
+26,RU,Хотелось бы иметь мобильное приложение для iOS и Android,feature_request,low,Product Team,false,
+27,EN,Please add the ability to export reports to Excel format,feature_request,low,Product Team,false,
+28,RU,Можете добавить интеграцию с Notion?,feature_request,low,Product Team,false,
+29,EN,We need API access for enterprise automation - this is blocking our whole team,feature_request,medium,Product Team,false,
+30,RU,Не хватает функции совместного редактирования документов в реальном времени,feature_request,low,Product Team,false,
+31,EN,Please add keyboard shortcuts for power users to speed up workflow,feature_request,low,Product Team,false,
+32,RU,Поддержка отвечает слишком долго. Жду ответа уже 3 дня.,complaint,medium,Customer Success,false,
+33,EN,Your service went down 3 times this week. This is completely unacceptable.,complaint,high,Customer Success,false,
+34,RU,Я очень разочарован качеством вашего продукта за последний месяц,complaint,medium,Customer Success,false,
+35,EN,I am cancelling my subscription because your customer service is terrible,complaint,high,Customer Success,false,
+36,RU,Это недопустимо! Ваши постоянные сбои сорвали мою презентацию перед клиентами,complaint,high,Customer Success,false,emotional
+37,EN,I have been a loyal customer for 3 years and this is how you treat me?,complaint,medium,Customer Success,false,
+38,RU,Ваш продукт совсем не соответствует тому что написано на вашем сайте,complaint,medium,Customer Success,false,
+39,EN,What are your customer support business hours?,general_inquiry,low,General Support,false,
+40,RU,Как добавить нового пользователя в командный аккаунт?,general_inquiry,low,General Support,false,
+41,EN,Do you offer a free trial for the Pro plan?,general_inquiry,low,General Support,false,
+42,RU,Есть ли у вас документация по REST API?,general_inquiry,low,General Support,false,
+43,EN,What is the difference between the Basic and Pro subscription plans?,general_inquiry,low,General Support,false,
+44,RU,Соответствует ли ваш продукт требованиям GDPR и где найти DPA?,general_inquiry,medium,General Support,false,
+45,EN,How do I connect your service to Zapier for automation?,general_inquiry,low,General Support,false,
+46,EN,I can't log in and I also got charged twice this month,account_access,high,Account Security,true,multi-topic
+47,RU,Помогите,general_inquiry,low,General Support,true,very-short
+48,EN,It doesn't work,technical_issue,medium,Engineering Support,true,vague
+49,RU,Всё сломалось,technical_issue,medium,Engineering Support,true,vague
+50,EN,I'm really frustrated and not happy with the service at all,complaint,medium,Customer Success,true,ambiguous

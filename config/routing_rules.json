@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "confidence_threshold": 0.8,
+  "max_message_length": 4000,
+  "routes": [
+    {
+      "category": "billing",
+      "team": "Billing Team",
+      "channel": "#support-billing",
+      "escalation": "Finance Manager"
+    },
+    {
+      "category": "technical_issue",
+      "team": "Engineering Support",
+      "channel": "#support-engineering",
+      "escalation": "Engineering Lead"
+    },
+    {
+      "category": "account_access",
+      "team": "Account Security",
+      "channel": "#support-accounts",
+      "escalation": "Security Team"
+    },
+    {
+      "category": "feature_request",
+      "team": "Product Team",
+      "channel": "#product-feedback",
+      "escalation": "Product Manager"
+    },
+    {
+      "category": "complaint",
+      "team": "Customer Success",
+      "channel": "#support-escalations",
+      "escalation": "CS Manager"
+    },
+    {
+      "category": "general_inquiry",
+      "team": "General Support",
+      "channel": "#support-general",
+      "escalation": "Support Lead"
+    }
+  ],
+  "priority_overrides": [
+    {
+      "condition": "priority == 'critical'",
+      "action": "Всегда human review (независимо от confidence) + немедленное уведомление в #incidents + escalation owner",
+      "force_human_review": true,
+      "rationale": "Human augmentation, не replacement: бот предоставляет summary и классификацию, человек принимает решение. Цена ошибки для critical несоразмерна выгоде автоматизации."
+    }
+  ],
+  "fallback": {
+    "route": "General Support",
+    "channel": "#support-general",
+    "reason": "API error, parse failure, or unrecognized category"
+  }
+}
