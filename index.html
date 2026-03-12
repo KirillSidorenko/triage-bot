@@ -505,15 +505,15 @@
       <tbody>
         <tr><td>Точность категоризации</td><td class="good">92%</td><td>85%</td><td class="good">+12pp от ~80%</td></tr>
         <tr><td>Точность маршрутизации</td><td class="good">92%</td><td>85%</td><td class="good">+12pp</td></tr>
-        <tr><td>Триггер human review</td><td class="good">92%</td><td>85%</td><td>—</td></tr>
-        <tr><td>Точность приоритета</td><td class="warn">48%</td><td>70%</td><td class="warn">В работе</td></tr>
+        <tr><td>Триггер human review</td><td class="good">94%</td><td>85%</td><td>—</td></tr>
+        <tr><td>Точность приоритета</td><td class="warn">76%</td><td>70%</td><td class="good">+30pp за 2 итерации</td></tr>
         <tr><td>Время обработки</td><td class="good">~3 сек</td><td>&lt;10 сек</td><td class="good">vs. 3–5 минут</td></tr>
         <tr><td>Стоимость тикета</td><td class="good">$0.0001</td><td>—</td><td class="good">vs. ~$0.50–2</td></tr>
       </tbody>
     </table>
 
     <div class="callout">
-      <strong>Открытая проблема:</strong> точность приоритета 48% (v1.0: 46%). Модель по-прежнему недооценивает <code>low</code> — из 13 ожидаемых кейсов выдаёт только 3. Feature request priority accuracy = 0%. Critical detection улучшился после v1.1 (модель теперь корректно распознаёт security incidents). Следующий фикс: явный few-shot для low + правило для feature_request.
+      <strong>Итерационное улучшение:</strong> priority accuracy 46% → 76% за 2 итерации промпт-инжиниринга. Feature_request: 0% → 86% после явного правила в определении. Открытая проблема: complaint priority — модель смещает medium → high (v1.3).
     </div>
 
     <div class="screenshots-row">

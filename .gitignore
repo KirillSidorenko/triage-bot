@@ -11,7 +11,12 @@ Product-Manager-Skills/
 # Internal docs (not for public repo)
 docs/
 demo/demo_script.md
+demo/*.gif
 eval/eval_results.csv
+
+# Unused screenshots
+demo/screenshots/sheets_check.png
+demo/screenshots/telegram-auto-route.png
 
 # OS
 .DS_Store

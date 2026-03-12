@@ -1,15 +1,18 @@
-# Eval Report — Triage Bot v1.1
+# Eval Report — Triage Bot v1.2
 
 ## История версий
 
 | Версия | Дата | Category | Priority | Route | Needs Review |
 |--------|------|----------|----------|-------|--------------|
 | v1.0 | 2026-03-11 | 92% | 46% | 92% | 90% |
-| v1.1 | 2026-03-12 | **92%** | **48%** | **92%** | **92%** |
+| v1.1 | 2026-03-12 | 92% | 48% | 92% | 92% |
+| v1.2 | 2026-03-12 | **92%** | **76%** | **92%** | **94%** |
 
-**Изменения в v1.1:** уточнено определение `critical` (добавлены явные триггеры: hacking, passwords leaked, account compromised), добавлено ограничение для `low` (только feature requests и general questions).
+**v1.1:** уточнено определение `critical` (hacking, passwords leaked, account compromised). Priority +2pp, critical detection улучшился.
 
-**Результат фикса:** critical detection улучшился (модель теперь смелее ставит critical), но `low` по-прежнему не работает. Priority accuracy практически не изменилась (+2pp). Главная проблема остаётся — см. анализ ниже.
+**v1.2:** правило `feature_request → always low` встроено в определение приоритета. Добавлены few-shot примеры: urgent feature_request → low, complaint → medium. Feature_request priority: 0% → 86%. Priority overall: +28pp.
+
+**Открытая проблема:** complaint priority — модель смещает medium → high. Кандидат на v1.3.
 
 ---
 
