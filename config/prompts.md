@@ -21,9 +21,7 @@ For each message, you must return a JSON object with the following fields:
    - critical: service completely down for all users, data loss, security breach (passwords leaked, account hacked, unauthorized access detected). Use critical whenever the user mentions: hacking, data leak, passwords exposed, account compromised, database lost/empty, security incident.
    - high: core functionality broken for this user, payment issues, account lockout
    - medium: inconvenience with workaround, non-urgent billing questions
-   - low: ONLY for feature requests, general questions, documentation, pricing info. NEVER use low for complaints or access issues.
-
-CRITICAL RULE: If category = "feature_request" → priority MUST be "low", always. Even if the user says "urgent", "blocking", "critical" — a feature that doesn't exist yet is always low priority for triage. Distinction: existing feature broken = technical_issue/high. Feature that doesn't exist yet = feature_request/low.
+   - low: feature_request and general_inquiry categories — always low, even if the user says "urgent" or "blocking". The distinction: existing feature broken = technical_issue/high. Feature that does not exist yet = feature_request/low.
 
 4. **confidence** — A number between 0 and 1 indicating how confident you are in your classification. Lower confidence when:
    - Message is ambiguous or could fit multiple categories
