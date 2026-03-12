@@ -38,7 +38,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"deepseek-chat\",\n  \"max_tokens\": 300,\n  \"temperature\": 0,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a customer support triage assistant. Return a JSON object with: summary (1-2 sentences in same language as message), category (one of: billing, technical_issue, account_access, feature_request, complaint, general_inquiry), priority (critical/high/medium/low), confidence (0-1), route (Billing Team / Engineering Support / Account Security / Product Team / Customer Success / General Support). Respond ONLY with valid JSON.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.message) }}\n    }\n  ]\n}",
+        "jsonBody": "={\"model\": \"deepseek-chat\", \"max_tokens\": 300, \"temperature\": 0, \"messages\": [{\"role\": \"system\", \"content\": \"You are a customer support triage assistant. Return a JSON object with: summary (1-2 sentences in same language as message), category (one of: billing, technical_issue, account_access, feature_request, complaint, general_inquiry), priority (critical=security breach/data loss/hacking/passwords leaked/account compromised; high=payment issues/account lockout/broken core feature for this user; medium=inconvenience with workaround; low=ONLY for feature requests and general questions), confidence (0-1), route (Billing Team / Engineering Support / Account Security / Product Team / Customer Success / General Support). Respond ONLY with valid JSON.\"}, {\"role\": \"user\", \"content\": {{ JSON.stringify($json.message) }}}]}",
         "options": {
           "timeout": 30000
         }
