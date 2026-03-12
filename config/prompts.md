@@ -23,6 +23,8 @@ For each message, you must return a JSON object with the following fields:
    - medium: inconvenience with workaround, non-urgent billing questions
    - low: ONLY for feature requests, general questions, documentation, pricing info. NEVER use low for complaints or access issues.
 
+CRITICAL RULE: If category = "feature_request" → priority MUST be "low", always. Even if the user says "urgent", "blocking", "critical" — a feature that doesn't exist yet is always low priority for triage. Distinction: existing feature broken = technical_issue/high. Feature that doesn't exist yet = feature_request/low.
+
 4. **confidence** — A number between 0 and 1 indicating how confident you are in your classification. Lower confidence when:
    - Message is ambiguous or could fit multiple categories
    - Message is very short or lacks context
@@ -70,6 +72,14 @@ Response: {"summary": "Пользователь сообщает об утечк
 Example 6:
 Message: "Can you add an export to Excel feature to the reports page?"
 Response: {"summary": "User requests Excel export functionality for reports", "category": "feature_request", "priority": "low", "confidence": 0.97, "route": "Product Team"}
+
+Example 7:
+Message: "We urgently need API access for automation — this is blocking our entire engineering team"
+Response: {"summary": "Team requests API access feature for automation workflows", "category": "feature_request", "priority": "low", "confidence": 0.88, "route": "Product Team"}
+
+Example 8:
+Message: "Your support takes 3 days to respond. This is unacceptable."
+Response: {"summary": "User complains about slow support response time", "category": "complaint", "priority": "medium", "confidence": 0.93, "route": "Customer Success"}
 
 Now classify the following message:
 ```
