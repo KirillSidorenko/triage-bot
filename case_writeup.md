@@ -56,11 +56,14 @@ Evaluation on 50 synthetic test cases (balanced across 6 categories, RU/EN, incl
 |--------|--------|--------------------|
 | Category accuracy | **92%** | +12pp vs ~80% manual |
 | Routing accuracy | **92%** | Tied to category |
-| Human review trigger | **90%** | All critical cases caught |
+| Human review trigger | **94%** | All critical cases caught |
+| Priority accuracy | **76%** | +30pp through prompt iteration |
 | Processing time | **~3 sec** | vs. 3–5 min manual |
 | Cost per ticket | **~$0.0001** | vs. ~$0.50–2 labor cost |
 
-**Known issue:** Priority accuracy at 46% — the model is biased toward higher severity. Feature requests and general inquiries get rated "medium" instead of "low". Root cause identified (prompt definition of "low" is too vague), fix ready for v1.1.
+*Results from v1.2 eval run. 50 synthetic test cases across 6 categories, RU/EN, including edge cases.*
+
+**Prompt iteration:** Priority accuracy improved from 46% → 76% over two iterations. v1.1 tightened the `critical` definition (added explicit security triggers). v1.2 added a hard rule for `feature_request → always low` with supporting few-shot examples. Feature_request priority accuracy: 0% → 86%. Open issue: complaint category still biased toward higher severity (v1.3 candidate).
 
 ---
 
@@ -74,11 +77,12 @@ Evaluation on 50 synthetic test cases (balanced across 6 categories, RU/EN, incl
 
 ---
 
-## Next Steps (v1.1 → v2)
+## Next Steps
 
-**v1.1 (prompt tuning):**
-- Fix priority calibration — explicit `low` examples in system prompt
-- Add rule: message length < 20 chars → auto-flag for review
+**Controlled pilot:**
+- Run with real messages from a small team or friendly business
+- Capture reviewer decisions to close the feedback loop
+- Get one testimonial from a real reviewer
 
 **v2 (multi-channel):**
 - Email intake via Gmail/Outlook integration
