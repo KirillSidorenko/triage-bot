@@ -1,0 +1,76 @@
+{
+  "version": "1.0",
+  "api": {
+    "base_url": "https://api.tracker.yandex.net/v3",
+    "ui_base_url": "https://tracker.yandex.ru",
+    "auth_mode": "OAuth",
+    "header_name": "X-Cloud-Org-Id",
+    "required_scopes": [
+      "tracker:read",
+      "tracker:write"
+    ],
+    "required_env": [
+      "YANDEX_TRACKER_OAUTH_TOKEN",
+      "YANDEX_TRACKER_CLOUD_ORG_ID"
+    ],
+    "fallback_env": [
+      "YANDEX_OAUTH_TOKEN",
+      "YANDEX_ORG_ID"
+    ]
+  },
+  "route_mapping": [
+    {
+      "category": "billing",
+      "route": "Billing Team",
+      "production_queue_key": "BILLING",
+      "staging_queue_key": "TBILLING"
+    },
+    {
+      "category": "technical_issue",
+      "route": "Engineering Support",
+      "production_queue_key": "ENGSUP",
+      "staging_queue_key": "TENGSUP"
+    },
+    {
+      "category": "account_access",
+      "route": "Account Security",
+      "production_queue_key": "ACCSEC",
+      "staging_queue_key": "TACCSEC"
+    },
+    {
+      "category": "feature_request",
+      "route": "Product Team",
+      "production_queue_key": "PRODUCT",
+      "staging_queue_key": "TPRODUCT"
+    },
+    {
+      "category": "complaint",
+      "route": "Customer Success",
+      "production_queue_key": "CSM",
+      "staging_queue_key": "TCSM"
+    },
+    {
+      "category": "general_inquiry",
+      "route": "General Support",
+      "production_queue_key": "GENSUP",
+      "staging_queue_key": "TGENSUP"
+    }
+  ],
+  "special_queues": {
+    "review": {
+      "production_queue_key": "SUPREV",
+      "staging_queue_key": "TSUPREV",
+      "usage": "critical tickets, low-confidence tickets, and error fallbacks"
+    }
+  },
+  "staging_examples": {
+    "billing": "TBILLING",
+    "technical_issue": "TENGSUP",
+    "account_access": "TACCSEC",
+    "feature_request": "TPRODUCT",
+    "complaint": "TCSM",
+    "general_inquiry": "TGENSUP",
+    "review": "TSUPREV",
+    "google_sheets_log_tab": "Triage Log - Staging"
+  }
+}

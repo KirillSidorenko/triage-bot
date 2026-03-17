@@ -49,3 +49,6 @@ id,language,message,expected_category,expected_priority,expected_route,expected_
 48,EN,It doesn't work,technical_issue,medium,Engineering Support,true,vague
 49,RU,Всё сломалось,technical_issue,medium,Engineering Support,true,vague
 50,EN,I'm really frustrated and not happy with the service at all,complaint,medium,Customer Success,true,ambiguous
+51,RU,Как оплатить сервис?,billing,medium,Billing Team,false,billing-how-to
+52,RU,Как зайти в систему?,general_inquiry,low,General Support,false,login-how-to
+53,RU,Не могу зайти в систему пароль не подходит,account_access,high,Account Security,false,login-failure

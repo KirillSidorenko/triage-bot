@@ -1,5 +1,5 @@
 {
-  "name": "Triage Bot — Customer Support AI",
+  "name": "Triage Bot - Customer Support AI + Yandex Tracker",
   "nodes": [
     {
       "parameters": {
@@ -123,7 +123,7 @@
         "text": "={{ $json.text }}"
       },
       "id": "node-deepseek-chain",
-      "name": "DeepSeek — Classify",
+      "name": "DeepSeek - Classify",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.4,
       "position": [
@@ -253,6 +253,65 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "review_reason",
+              "name": "review_reason",
+              "value": "={{ $json.priority === 'critical' ? 'критический приоритет' : 'низкая уверенность классификации' }}",
+              "type": "string"
+            },
+            {
+              "id": "tracker_queue_auto",
+              "name": "tracker_queue_auto",
+              "value": "={{ ({ billing: 'TBILLING', technical_issue: 'TENGSUP', account_access: 'TACCSEC', feature_request: 'TPRODUCT', complaint: 'TCSM', general_inquiry: 'TGENSUP' })[$json.category] || 'TGENSUP' }}",
+              "type": "string"
+            },
+            {
+              "id": "tracker_queue_review",
+              "name": "tracker_queue_review",
+              "value": "={{ 'TSUPREV' }}",
+              "type": "string"
+            },
+            {
+              "id": "tracker_summary_auto",
+              "name": "tracker_summary_auto",
+              "value": "={{ $json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "tracker_summary_review",
+              "name": "tracker_summary_review",
+              "value": "={{ $json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "tracker_description_auto",
+              "name": "tracker_description_auto",
+              "value": "={{ `Канал: Telegram\nКлиент: ${$('Normalize Input').item.json.sender} (${ $('Normalize Input').item.json.sender_id })\nПолучено: ${$('Normalize Input').item.json.timestamp}\n\nСообщение клиента:\n${$('Normalize Input').item.json.text}\n\nКраткое описание:\n${$json.summary}\n\nКатегория обращения: ${$json.category}` }}",
+              "type": "string"
+            },
+            {
+              "id": "tracker_description_review",
+              "name": "tracker_description_review",
+              "value": "={{ `Канал: Telegram\nКлиент: ${$('Normalize Input').item.json.sender} (${ $('Normalize Input').item.json.sender_id })\nПолучено: ${$('Normalize Input').item.json.timestamp}\n\nСообщение клиента:\n${$('Normalize Input').item.json.text}\n\nКраткое описание:\n${$json.summary}\n\nПредварительная категория: ${$json.category}\nПредварительный приоритет: ${$json.priority}\nПричина ручной проверки: ${$json.review_reason}` }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true
+      },
+      "id": "node-prepare-tracker",
+      "name": "Prepare Tracker Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        -60
+      ]
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "combinator": "or"
@@ -282,23 +341,107 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1320,
+        1540,
         -60
       ],
-      "notes": "Human review если: confidence < 0.8 ИЛИ priority = critical (всегда human review для critical)"
+      "notes": "Human review if confidence < 0.8 or priority = critical."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tracker.yandex.net/v3/issues/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"summary\": {{ JSON.stringify($json.tracker_summary_auto) }}, \"queue\": {{ JSON.stringify($json.tracker_queue_auto) }}, \"description\": {{ JSON.stringify($json.tracker_description_auto) }}}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "node-tracker-auto",
+      "name": "Yandex Tracker - Auto Route",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1770,
+        -180
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "HTTP_CUSTOM_AUTH_CREDENTIAL_ID",
+          "name": "Yandex Tracker"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tracker.yandex.net/v3/issues/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"summary\": {{ JSON.stringify($json.tracker_summary_review) }}, \"queue\": {{ JSON.stringify($json.tracker_queue_review) }}, \"description\": {{ JSON.stringify($json.tracker_description_review) }}}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "node-tracker-review",
+      "name": "Yandex Tracker - Needs Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1770,
+        40
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "HTTP_CUSTOM_AUTH_CREDENTIAL_ID",
+          "name": "Yandex Tracker"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "mode": "id",
-          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
+          "mode": "list",
+          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE",
+          "cachedResultName": "Triage Bot Results",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
         },
         "sheetName": {
           "__rl": true,
-          "mode": "name",
-          "value": "Triage Log"
+          "mode": "list",
+          "value": "694288495",
+          "cachedResultName": "Triage Log - Staging",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE/edit#gid=694288495"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -306,25 +449,32 @@
             "timestamp": "={{ $('Normalize Input').item.json.timestamp }}",
             "sender": "={{ $('Normalize Input').item.json.sender }}",
             "original_message": "={{ $('Normalize Input').item.json.text }}",
-            "summary": "={{ $json.summary }}",
-            "category": "={{ $json.category }}",
-            "priority": "={{ $json.priority }}",
-            "confidence": "={{ $json.confidence }}",
-            "route": "={{ $json.route }}",
+            "summary": "={{ $('Prepare Tracker Payload').item.json.summary }}",
+            "category": "={{ $('Prepare Tracker Payload').item.json.category }}",
+            "priority": "={{ $('Prepare Tracker Payload').item.json.priority }}",
+            "confidence": "={{ $('Prepare Tracker Payload').item.json.confidence }}",
+            "route": "={{ $('Prepare Tracker Payload').item.json.route }}",
             "needs_review": "false",
             "reviewer_decision": "",
-            "final_category": "={{ $json.category }}",
-            "processing_time_ms": "={{ $json.processing_time_ms }}"
-          }
+            "final_category": "={{ $('Prepare Tracker Payload').item.json.category }}",
+            "processing_time_ms": "={{ $('Prepare Tracker Payload').item.json.processing_time_ms }}",
+            "tracker_issue_key": "={{ $json.key }}",
+            "tracker_queue": "={{ $('Prepare Tracker Payload').item.json.tracker_queue_auto }}",
+            "tracker_issue_url": "={{ 'https://tracker.yandex.ru/' + $json.key }}"
+          },
+          "schema": [],
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "id": "node-sheets-auto",
-      "name": "Google Sheets — Auto Route",
+      "name": "Google Sheets - Auto Route",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        1580,
-        -160
+        2000,
+        -260
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -338,13 +488,17 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "mode": "id",
-          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
+          "mode": "list",
+          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE",
+          "cachedResultName": "Triage Bot Results",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
         },
         "sheetName": {
           "__rl": true,
-          "mode": "name",
-          "value": "Triage Log"
+          "mode": "list",
+          "value": "694288495",
+          "cachedResultName": "Triage Log - Staging",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE/edit#gid=694288495"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -352,25 +506,32 @@
             "timestamp": "={{ $('Normalize Input').item.json.timestamp }}",
             "sender": "={{ $('Normalize Input').item.json.sender }}",
             "original_message": "={{ $('Normalize Input').item.json.text }}",
-            "summary": "={{ $json.summary }}",
-            "category": "={{ $json.category }}",
-            "priority": "={{ $json.priority }}",
-            "confidence": "={{ $json.confidence }}",
-            "route": "={{ $json.route }}",
+            "summary": "={{ $('Prepare Tracker Payload').item.json.summary }}",
+            "category": "={{ $('Prepare Tracker Payload').item.json.category }}",
+            "priority": "={{ $('Prepare Tracker Payload').item.json.priority }}",
+            "confidence": "={{ $('Prepare Tracker Payload').item.json.confidence }}",
+            "route": "={{ $('Prepare Tracker Payload').item.json.route }}",
             "needs_review": "true",
             "reviewer_decision": "",
             "final_category": "",
-            "processing_time_ms": "={{ $json.processing_time_ms }}"
-          }
+            "processing_time_ms": "={{ $('Prepare Tracker Payload').item.json.processing_time_ms }}",
+            "tracker_issue_key": "={{ $json.key }}",
+            "tracker_queue": "={{ $('Prepare Tracker Payload').item.json.tracker_queue_review }}",
+            "tracker_issue_url": "={{ 'https://tracker.yandex.ru/' + $json.key }}"
+          },
+          "schema": [],
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "id": "node-sheets-review",
-      "name": "Google Sheets — Needs Review",
+      "name": "Google Sheets - Needs Review",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        1580,
-        60
+        2000,
+        -20
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -382,18 +543,19 @@
     {
       "parameters": {
         "chatId": "={{ $('Normalize Input').item.json.chat_id }}",
-        "text": "={{ '✅ Обращение принято!\\n\\n📋 Категория: ' + $json.category + '\\n⚡ Приоритет: ' + $json.priority + '\\n👥 Направлено: ' + $json.route + '\\n\\nВаше обращение обрабатывается.' }}",
+        "text": "={{ '✅ Обращение принято.\\n\\nПередали его в работу. Если понадобятся уточнения, мы свяжемся с вами.' }}",
         "additionalFields": {
-          "parse_mode": "HTML"
+          "parse_mode": "HTML",
+          "appendAttribution": false
         }
       },
       "id": "node-telegram-confirm-auto",
-      "name": "Telegram — Confirm (Auto)",
+      "name": "Telegram - Confirm (Auto)",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1800,
-        -160
+        2000,
+        -120
       ],
       "credentials": {
         "telegramApi": {
@@ -405,18 +567,19 @@
     {
       "parameters": {
         "chatId": "={{ $('Normalize Input').item.json.chat_id }}",
-        "text": "✅ Обращение принято!\n\nВаш запрос передан на рассмотрение специалисту. Мы свяжемся с вами в ближайшее время.",
+        "text": "={{ '✅ Обращение принято.\\n\\nПередали его специалисту. Если понадобятся уточнения, мы свяжемся с вами.' }}",
         "additionalFields": {
-          "parse_mode": "HTML"
+          "parse_mode": "HTML",
+          "appendAttribution": false
         }
       },
       "id": "node-telegram-confirm-review",
-      "name": "Telegram — Confirm (Review)",
+      "name": "Telegram - Confirm (Review)",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1800,
-        0
+        2000,
+        100
       ],
       "credentials": {
         "telegramApi": {
@@ -427,35 +590,39 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $env.REVIEWER_CHAT_ID }}",
-        "text": "={{ '🔍 Требуется review\\n\\nОт: ' + $('Normalize Input').item.json.sender + '\\n\\nСообщение: ' + $('Normalize Input').item.json.text + '\\n\\nAI предложил:\\n- Категория: ' + $json.category + '\\n- Приоритет: ' + $json.priority + '\\n- Confidence: ' + $json.confidence + '\\n- Summary: ' + $json.summary + (($json.priority === 'critical') ? '\\n\\n🚨 CRITICAL — требуется немедленная реакция' : '') }}",
+        "chatId": "-1003807392857",
+        "text": "={{ 'Требуется ручная проверка обращения\\n\\nТикет: ' + $json.key + '\\nКлиент: ' + $('Normalize Input').item.json.sender + '\\n\\nСообщение клиента:\\n' + $('Normalize Input').item.json.text + '\\n\\nПредварительная категория: ' + $('Prepare Tracker Payload').item.json.category + '\\nПредварительный приоритет: ' + $('Prepare Tracker Payload').item.json.priority + '\\nКраткое описание: ' + $('Prepare Tracker Payload').item.json.summary + '\\nПричина проверки: ' + $('Prepare Tracker Payload').item.json.review_reason + '\\n\\nОткрыть тикет: https://tracker.yandex.ru/' + $json.key }}",
         "additionalFields": {
-          "parse_mode": "HTML"
+          "parse_mode": "HTML",
+          "appendAttribution": false
         }
       },
       "id": "node-telegram-reviewer",
-      "name": "Telegram — Notify Reviewer",
+      "name": "Telegram - Notify Reviewer",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1800,
-        120
+        2000,
+        220
       ],
       "credentials": {
         "telegramApi": {
           "id": "TELEGRAM_CREDENTIAL_ID",
           "name": "Telegram Bot"
         }
-      }
+      },
+      "notes": "Подключать только после настройки отдельного внутреннего reviewer-чата."
     },
     {
       "parameters": {
         "chatId": "={{ $json.message.chat.id }}",
-        "text": "⚠️ Пожалуйста, отправьте текстовое сообщение (до 4000 символов).",
-        "additionalFields": {}
+        "text": "Пожалуйста, отправьте обращение текстом, до 4000 символов.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "id": "node-telegram-error-input",
-      "name": "Telegram — Invalid Input",
+      "name": "Telegram - Invalid Input",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
@@ -471,16 +638,60 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://api.tracker.yandex.net/v3/issues/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"summary\": \"Требуется ручная обработка обращения\", \"queue\": {{ JSON.stringify('TSUPREV') }}, \"description\": {{ JSON.stringify('Канал: Telegram\\nКлиент: ' + $('Normalize Input').item.json.sender + ' (' + $('Normalize Input').item.json.sender_id + ')\\nПолучено: ' + $('Normalize Input').item.json.timestamp + '\\n\\nСообщение клиента:\\n' + $('Normalize Input').item.json.text + '\\n\\nНе удалось автоматически классифицировать обращение.\\nПроверьте его вручную.') }}}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "node-tracker-error",
+      "name": "Yandex Tracker - Error Fallback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        140
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "HTTP_CUSTOM_AUTH_CREDENTIAL_ID",
+          "name": "Yandex Tracker"
+        }
+      }
+    },
+    {
+      "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "mode": "id",
-          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
+          "mode": "list",
+          "value": "1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE",
+          "cachedResultName": "Triage Bot Results",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE"
         },
         "sheetName": {
           "__rl": true,
-          "mode": "name",
-          "value": "Triage Log"
+          "mode": "list",
+          "value": "694288495",
+          "cachedResultName": "Triage Log - Staging",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1X-6Cv2KBBxP0YqQJLmlf4wcUvuIL56qNT1uxWMcSttE/edit#gid=694288495"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -488,7 +699,7 @@
             "timestamp": "={{ $('Normalize Input').item.json.timestamp }}",
             "sender": "={{ $('Normalize Input').item.json.sender }}",
             "original_message": "={{ $('Normalize Input').item.json.text }}",
-            "summary": "ERROR: Failed to parse AI response",
+            "summary": "Требуется ручная обработка обращения",
             "category": "general_inquiry",
             "priority": "medium",
             "confidence": "0",
@@ -496,16 +707,23 @@
             "needs_review": "true",
             "reviewer_decision": "",
             "final_category": "",
-            "processing_time_ms": "={{ Date.now() - $('Normalize Input').item.json.received_at_ms }}"
-          }
+            "processing_time_ms": "={{ Date.now() - $('Normalize Input').item.json.received_at_ms }}",
+            "tracker_issue_key": "={{ $json.key }}",
+            "tracker_queue": "={{ 'TSUPREV' }}",
+            "tracker_issue_url": "={{ 'https://tracker.yandex.ru/' + $json.key }}"
+          },
+          "schema": [],
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "id": "node-sheets-error",
-      "name": "Google Sheets — Error Fallback",
+      "name": "Google Sheets - Error Fallback",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        1100,
+        1320,
         140
       ],
       "credentials": {
@@ -518,16 +736,18 @@
     {
       "parameters": {
         "chatId": "={{ $('Normalize Input').item.json.chat_id }}",
-        "text": "✅ Обращение принято!\n\nВаш запрос передан на рассмотрение специалисту. Мы свяжемся с вами в ближайшее время.",
-        "additionalFields": {}
+        "text": "={{ '✅ Обращение принято.\\n\\nПередали его специалисту. Если понадобятся уточнения, мы свяжемся с вами.' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "id": "node-telegram-error-confirm",
-      "name": "Telegram — Confirm (Error)",
+      "name": "Telegram - Confirm (Error)",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
         1320,
-        140
+        240
       ],
       "credentials": {
         "telegramApi": {
@@ -564,14 +784,14 @@
       "main": [
         [
           {
-            "node": "DeepSeek — Classify",
+            "node": "DeepSeek - Classify",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Telegram — Invalid Input",
+            "node": "Telegram - Invalid Input",
             "type": "main",
             "index": 0
           }
@@ -582,14 +802,14 @@
       "ai_languageModel": [
         [
           {
-            "node": "DeepSeek — Classify",
+            "node": "DeepSeek - Classify",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "DeepSeek — Classify": {
+    "DeepSeek - Classify": {
       "main": [
         [
           {
@@ -611,7 +831,7 @@
         ],
         [
           {
-            "node": "Google Sheets — Error Fallback",
+            "node": "Yandex Tracker - Error Fallback",
             "type": "main",
             "index": 0
           }
@@ -619,6 +839,17 @@
       ]
     },
     "Validate AI Output": {
+      "main": [
+        [
+          {
+            "node": "Prepare Tracker Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Tracker Payload": {
       "main": [
         [
           {
@@ -633,52 +864,67 @@
       "main": [
         [
           {
-            "node": "Google Sheets — Auto Route",
+            "node": "Yandex Tracker - Needs Review",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Google Sheets — Needs Review",
+            "node": "Yandex Tracker - Auto Route",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets — Auto Route": {
+    "Yandex Tracker - Auto Route": {
       "main": [
         [
           {
-            "node": "Telegram — Confirm (Auto)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Sheets — Needs Review": {
-      "main": [
-        [
-          {
-            "node": "Telegram — Confirm (Review)",
+            "node": "Google Sheets - Auto Route",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Telegram — Notify Reviewer",
+            "node": "Telegram - Confirm (Auto)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets — Error Fallback": {
+  "Yandex Tracker - Needs Review": {
+    "main": [
+      [
+        {
+          "node": "Google Sheets - Needs Review",
+          "type": "main",
+          "index": 0
+        },
+        {
+          "node": "Telegram - Confirm (Review)",
+          "type": "main",
+          "index": 0
+        },
+        {
+          "node": "Telegram - Notify Reviewer",
+          "type": "main",
+          "index": 0
+        }
+      ]
+    ]
+  },
+    "Yandex Tracker - Error Fallback": {
       "main": [
         [
           {
-            "node": "Telegram — Confirm (Error)",
+            "node": "Google Sheets - Error Fallback",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram - Confirm (Error)",
             "type": "main",
             "index": 0
           }
@@ -699,8 +945,12 @@
     {
       "name": "ai-triage",
       "id": "tag-2"
+    },
+    {
+      "name": "yandex-tracker",
+      "id": "tag-3"
     }
   ],
   "pinData": {},
-  "versionId": "1.1.0"
+  "versionId": "1.0.0"
 }
