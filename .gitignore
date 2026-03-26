@@ -8,8 +8,7 @@ n8n/client_secret*.json
 .playwright-mcp/
 Product-Manager-Skills/
 
-# Internal docs (not for public repo)
-docs/
+# Internal
 demo/demo_script.md
 demo/*.gif
 eval/eval_results.csv
