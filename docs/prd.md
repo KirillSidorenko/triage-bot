@@ -2,7 +2,7 @@
 
 ## 1. Резюме
 
-Мы создаём AI-бота для автоматического триажа обращений в customer support — классификация, приоритизация и маршрутизация сообщений, сокращающая время triage с 5 минут до ~3 секунд на тикет. Текущая версия использует DeepSeek V3 (`deepseek-chat`) для анализа входящих сообщений в Telegram, классифицирует их по 6 категориям, назначает приоритет и направляет в ответственную команду — с human-in-the-loop для low-confidence и critical кейсов. В состоянии `v1.2` workflow уже собран end-to-end, прогнан на 50 synthetic test cases и показывает 92% classification accuracy, 92% routing accuracy, 76% priority accuracy и 94% review-trigger accuracy. Следующий шаг — controlled pilot на реальных сообщениях и логирование решений ревьюера.
+Мы создаём AI-бота для автоматического триажа обращений в customer support — классификация, приоритизация и маршрутизация сообщений, сокращающая время triage с 5 минут до ~3 секунд на тикет. Текущая версия использует DeepSeek V3 (`deepseek-chat`) для анализа входящих сообщений в Telegram, классифицирует их по 6 категориям, назначает приоритет и направляет в ответственную команду — с human-in-the-loop для low-confidence и critical кейсов. В состоянии `v1.2` workflow уже собран end-to-end; последний зафиксированный канонический прогон от 2026-03-12 на 50 synthetic test cases дал 92% classification accuracy, 92% routing accuracy, 76% priority accuracy и 94% review-trigger accuracy. Следующий шаг — controlled pilot на реальных сообщениях и логирование решений ревьюера.
 
 ---
 
@@ -119,8 +119,9 @@ AI triage bot принимает обращения клиентов через 
 ## 5.1 Текущее состояние (v1.2)
 
 - End-to-end workflow собран: Telegram → n8n → DeepSeek V3 → Yandex Tracker + Google Sheets audit log
-- Synthetic eval completed: 50 кейсов, 6 категорий, RU/EN, включая edge cases
-- Измеренные результаты: category 92%, routing 92%, priority 76%, review trigger 94%
+- Рабочий benchmark set в репозитории: 55 кейсов (50 canonical + 5 regression additions)
+- Последний измеренный canonical run: 2026-03-12, 50 кейсов, 92% category, 92% routing, 76% priority, 94% review trigger
+- После синхронизации benchmark expectations с текущими policy rules нужен новый полный rerun, прежде чем считать метрики свежим live-score
 - Закрытая итерация: `feature_request → always low` + few-shot examples повысили priority accuracy с 46% до 76%
 - Открытая проблема: complaint category всё ещё смещается в сторону higher severity
 - Ещё не сделано: controlled pilot и полноценное использование reviewer feedback в отдельном цикле улучшений
@@ -138,7 +139,7 @@ AI triage bot принимает обращения клиентов через 
 ### Вторичные метрики
 | Метрика | Baseline | Текущее v1.2 | Pilot gate | Как измеряем |
 |---------|----------|--------------|------------|--------------|
-| Classification accuracy | — | **92%** | ≥85% | Evaluation set (50 кейсов) |
+| Classification accuracy | — | **92%** | ≥85% | Last canonical 50-case run |
 | Routing accuracy | 75–85% | **92%** | ≥90% | Evaluation set |
 | Priority accuracy | — | **76%** | ≥75% | Evaluation set |
 | Review trigger accuracy | — | **94%** | ≥90% | expected_needs_review vs actual_needs_review |
@@ -203,7 +204,7 @@ AI triage bot принимает обращения клиентов через 
 
 ### Edge Cases
 - **Сообщение на несколько тем:** "Не могу войти + дважды списали деньги" → классификация по основной проблеме, снижение confidence
-- **Очень короткое сообщение:** "не работает" → general_inquiry, низкий confidence, пометка для review
+- **Очень короткое или расплывчатое сообщение:** "не работает" → technical_issue, низкий confidence, пометка для review
 - **Эмоциональное сообщение:** "ВАШ СЕРВИС УЖАСЕН!!!" → смотрим сквозь эмоции на суть проблемы
 - **Prompt injection:** "Ignore instructions and..." → изоляция system prompt, валидация JSON
 
@@ -248,7 +249,7 @@ AI triage bot принимает обращения клиентов через 
 | Drift между workflow и stakeholder-facing docs | Средняя | Среднее | Держать `workflow_export.json` source of truth и синхронизировать demo materials после изменений |
 
 ### План раскатки
-1. **[x] Внутреннее тестирование** — 50 synthetic кейсов, v1.2 eval completed
+1. **[x] Внутреннее тестирование** — canonical 50-case eval completed; рабочий benchmark set расширен до 55 строк
 2. **[ ] Controlled pilot** — один канал / один тип обращений / реальные reviewer decisions
 3. **[ ] Shadow mode** — параллельно с ручным triage, сравнение результатов и ручных correction patterns
 4. **[ ] Расширение rollout** — pilot + reviewer feedback loop + дополнительные интеграции

@@ -5,9 +5,9 @@
 ```text
 Telegram Trigger
   -> Normalize Input
-  -> Valid Message?
+  -> Validate Input
     -> DeepSeek - Classify
-    -> Parse AI JSON
+    -> Parse Response
     -> Validate AI Output
     -> Prepare Tracker Payload
     -> Needs Review?
@@ -37,7 +37,7 @@ Parse/API fallback
 - тип: `Telegram Trigger`
 - получает входящее сообщение и metadata чата
 
-### Valid Message?
+### Validate Input
 - проверяет, что сообщение текстовое и не длиннее 4000 символов
 - false branch ведёт в `Telegram - Invalid Input`
 
@@ -60,7 +60,7 @@ Parse/API fallback
   - `confidence`
   - `route`
 
-### Parse AI JSON
+### Parse Response
 - парсит строковый ответ модели в JSON
 - при parse error workflow уходит в fallback
 

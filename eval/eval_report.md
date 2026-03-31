@@ -1,181 +1,169 @@
 # Eval Report — Triage Bot v1.2
 
-## История версий
-
-| Версия | Дата | Category | Priority | Route | Needs Review |
-|--------|------|----------|----------|-------|--------------|
-| v1.0 | 2026-03-11 | 92% | 46% | 92% | 90% |
-| v1.1 | 2026-03-12 | 92% | 48% | 92% | 92% |
-| v1.2 | 2026-03-12 | **92%** | **76%** | **92%** | **94%** |
-
-**v1.1:** уточнено определение `critical` (hacking, passwords leaked, account compromised). Priority +2pp, critical detection улучшился.
-
-**v1.2:** правило `feature_request → always low` встроено в определение приоритета. Добавлены few-shot примеры: urgent feature_request → low, complaint → medium. Feature_request priority: 0% → 86%. Priority overall: +28pp.
-
-**Открытая проблема:** complaint priority — модель смещает medium → high. Кандидат на v1.3.
-
----
-
-# Eval Report — Triage Bot v1.0
-
-**Дата:** 2026-03-11
+**Дата:** 2026-03-12
 **Модель:** DeepSeek V3 (`deepseek-chat`)
-**Eval set:** 50 синтетических кейсов
-**Языки:** RU (27), EN (23)
-**Покрытие:** 6 категорий, 4 приоритета, 5 edge case типов
+**Eval set:** 50 synthetic test cases
+**Языки:** RU / EN
+**Покрытие:** 6 категорий, 4 приоритета, edge cases: critical, multi-topic, very short, vague, ambiguous
+
+Важно: ниже — исторический отчёт по каноническому прогону от 2026-03-12. По состоянию на 2026-03-31 рабочий benchmark-набор в репозитории синхронизирован с текущими policy rules и расширен до 55 строк; свежий полный rerun после этой синхронизации ещё не выполнен.
+
+Дополнение: в [eval/test_cases.csv](/Users/sidorenko/Documents/triage_bot/eval/test_cases.csv) сейчас 55 строк. Кейсы `51-55` были добавлены позже как regression checks и не входят в проценты этого канонического v1.2 run.
 
 ---
 
-## Сводные метрики
+## История итераций
 
-| Метрика | Правильно | Accuracy | Оценка |
-|---------|-----------|----------|--------|
-| Category | 46/50 | **92%** | ✅ Хорошо |
-| Route | 46/50 | **92%** | ✅ Хорошо |
-| Needs Review | 45/50 | **90%** | ✅ Хорошо |
-| Priority | 23/50 | **46%** | ❌ Требует доработки |
+| Версия | Что менялось | Category | Priority | Route | Needs Review |
+|--------|--------------|----------|----------|-------|--------------|
+| v1.0 | Базовый structured prompt | 92% | 46% | 92% | 90% |
+| v1.1 | Уточнено определение `critical` | 92% | 48% | 92% | 92% |
+| v1.2 | `feature_request → always low` + targeted few-shot examples | **92%** | **76%** | **92%** | **94%** |
 
-> **Ключевой вывод:** модель хорошо понимает *что* (category 92%), но плохо калибрует *насколько срочно* (priority 46%). Routing accuracy совпадает с category accuracy, так как route определяется категорией.
-
----
-
-## Category Accuracy — 92% (46/50)
-
-### Ошибки (4 кейса)
-
-| ID | Сообщение | Expected | Actual | Причина |
-|----|-----------|----------|--------|---------|
-| 7 | Промокод не применяется | billing | technical_issue | Модель интерпретирует проблему с промокодом как технический баг |
-| 8 | Сняли деньги, доступ не открылся | billing | account_access | Граничный кейс: в сообщении два аспекта, модель выбрала account |
-| 23 | SSO integration stopped working | account_access | technical_issue | Спорный кейс: SSO = infrastructure, разумная ошибка |
-| 45 | How do I connect to Zapier? | general_inquiry | technical_issue | Интеграция = технический вопрос в понимании модели |
-
-### Наблюдения
-- Ошибки концентрируются на граничных случаях (billing vs technical, account vs technical)
-- Для чётко сформулированных кейсов accuracy выше 97%
-- Кейс #23 (SSO) — спорный: можно аргументировать оба варианта
+**Главный вывод по итерациям:** category и routing были сильными уже в v1.0. Основная работа шла по priority calibration. За две итерации prompt/rules priority accuracy вырос с 46% до 76%.
 
 ---
 
-## Priority Accuracy — 46% (23/50)
+## Текущие результаты v1.2
 
-### Системный паттерн: модель смещена в сторону HIGH/MEDIUM
-
-| Ожидалось | Получено | Кейсы | Кол-во |
-|-----------|----------|-------|--------|
-| low | medium | Feature requests (#25-31), General inquiry (#40-42, #47) | 10 |
-| medium | high | Complaints (#32, #34, #37, #38), Account (#17, #20) | 8 |
-| high | critical | Эмоциональные жалобы (#36), SSO (#23) | 2 |
-| medium | low | Редкие уведомления (#16) | 1 |
-
-### Что работает хорошо
-- Critical кейсы: 3/3 (100%) — data loss, взлом аккаунта распознаются верно
-- High кейсы (чёткие): 13/15 (87%)
-
-### Главная проблема: модель почти не использует `low`
-Из 50 кейсов модель вернула `low` только 1 раз (кейс #39). Ожидалось 14 кейсов с `low`.
-
-**Причина:** в системном промпте определение `low` недостаточно строгое. "Feature requests, non-urgent" — слишком широко, модель считает что feature request может быть важным.
+| Метрика | Результат | Интерпретация |
+|---------|-----------|---------------|
+| Category accuracy | **92%** | Достаточно для pilot gate |
+| Routing accuracy | **92%** | Сильный результат для single-workflow triage |
+| Priority accuracy | **76%** | Приемлемо для pilot с human review, но не для full auto |
+| Needs review accuracy | **94%** | Review gate работает надежно |
+| Processing time | **~3 сек** | Существенно быстрее ручного triage |
 
 ---
 
-## Needs Review Accuracy — 90% (45/50)
+## Что улучшили в v1.2
 
-### Ошибки (5 кейсов)
+### 1. Priority перестал завышаться для feature requests
 
-| ID | Сообщение | Expected | Actual | Причина |
-|----|-----------|----------|--------|---------|
-| 36 | "Ваши сбои сорвали презентацию" | false | true | Модель сказала critical → тригер review. False positive. |
-| 46 | "Cannot log in AND charged twice" | true | false | Multi-topic, но confidence=0.9 → ожидался низкий confidence |
-| 47 | "Помогите" | true | false | Очень короткое, но confidence=0.9 → порог не сработал |
-| 50 | "Not happy with service" | true | false | Расплывчато, но confidence=0.95 → порог не сработал |
-| 23 | SSO (см. выше) | false | true | Следствие ошибки category (critical priority) |
+В v1.0 модель почти не использовала `low` и системно завышала priority для `feature_request`.
 
-### Наблюдения
-- Модель уверена (0.9+) даже на edge cases (очень короткие, ambiguous сообщения)
-- Threshold 0.8 не ловит случаи, где модель ошибается уверенно
-- False positive review (#36) лучше чем false negative — human review не пропустит важное
+Что изменили:
+- в definition закрепили правило `feature_request → always low`
+- добавили few-shot examples для urgent / blocking feature request
+- усилили distinction между broken existing feature и missing feature
 
----
+Результат:
+- `feature_request` priority accuracy вырос с `0%` до `86%`
+- overall priority accuracy вырос на `28pp`
 
-## Анализ по категориям
+### 2. Critical detection стала устойчивее
 
-| Категория | Category Acc | Priority Acc | Примечание |
-|-----------|-------------|-------------|------------|
-| billing | 7/8 (88%) | 5/8 (63%) | Граница с account_access/technical |
-| technical_issue | 8/8 (100%) | 5/8 (63%) | Хорошо, но medium/high путаница |
-| account_access | 7/8 (88%) | 5/8 (63%) | SSO edge case |
-| feature_request | 7/7 (100%) | 0/7 (0%) | Всё medium вместо low |
-| complaint | 7/7 (100%) | 2/7 (29%) | Всё high вместо medium |
-| general_inquiry | 6/7 (86%) | 3/7 (43%) | Zapier ошибка + low→medium |
+В v1.1 уточнили definition `critical`:
+- hacking
+- passwords leaked
+- account compromised
+- database lost / empty
+- security incident
+
+Это не изменило category accuracy, но улучшило consistency для critical handling и `needs_review`.
 
 ---
 
-## Edge Cases
+## Что работает хорошо
 
-| Тип | Кейс | Результат | Вывод |
-|-----|------|-----------|-------|
-| critical (data loss) | #15 | ✅ Верно, review сработал | Критические случаи распознаются |
-| critical (security) | #21 | ✅ Верно, review сработал | Security breach распознаётся |
-| multi-topic | #46 | ⚠️ Category верно, review не сработал | Threshold не ловит multi-topic |
-| very-short ("Помогите") | #47 | ⚠️ Category верно, review не сработал | Модель уверена на коротких сообщениях |
-| vague ("It doesn't work") | #48 | ✅ Confidence=0.7, review сработал | Один из немногих случаев низкого confidence |
-| ambiguous | #50 | ⚠️ Category верно, review не сработал | Модель не неопределённость в жалобах |
+### Category / route
 
----
+- Модель стабильно различает основные operational classes:
+  - billing
+  - technical_issue
+  - account_access
+  - feature_request
+  - complaint
+  - general_inquiry
+- Routing accuracy совпадает с category accuracy, потому что route определяется категорией.
+- Для четко сформулированных кейсов качество уже выглядит pilot-ready.
 
-## Рекомендации
+### Human-in-the-loop gate
 
-### P0 — Критично (приоритет перед запуском)
+- `priority = critical` всегда отправляет кейс на review
+- `confidence < 0.8` отрабатывает как safety layer
+- `needs_review` accuracy = 94% достаточно, чтобы использовать workflow как assisted triage, а не full automation
 
-**1. Доработать промпт для priority `low`**
+### Time-to-value
 
-Добавить явный список в системный промпт:
-```
-low: ТОЛЬКО следующие типы — feature requests, general questions about pricing/docs/integrations,
-non-blocking inconveniences. НЕ используй high для feature requests никогда.
-```
-
-**2. Добавить few-shot примеры для low-priority кейсов**
-
-Текущие примеры не содержат ни одного `complaint` или `general_inquiry` с `medium` priority.
-
-### P1 — Важно (после запуска)
-
-**3. Снизить threshold для коротких сообщений**
-
-Если `message.length < 20` → автоматически `needs_review = true`, независимо от confidence.
-
-**4. Добавить правило для multi-topic**
-
-Если в summary встречаются два разных действия (AND в тексте) → снизить confidence принудительно.
-
-### P2 — Следующая итерация
-
-**5. Human feedback loop**
-
-Собирать `reviewer_decision` в Google Sheets → использовать как обучающие примеры для fine-tuning или обновления few-shot examples.
-
-**6. Добавить примеры граничных случаев**
-
-Cases #7 (промокод), #23 (SSO), #45 (Zapier) — добавить в few-shot как негативные примеры.
+- End-to-end processing time около `3 секунд`
+- Это делает кейс убедительным как AI workflow automation proof asset, а не только как LLM demo
 
 ---
 
-## Сравнение с baseline (ручной триаж)
+## Открытая проблема
 
-| Метрика | Ручной триаж (оценка) | AI v1.0 |
-|---------|----------------------|---------|
-| Время обработки | 3-5 мин | ~3 сек |
-| Category accuracy | ~80% | **92%** |
-| Consistency | Зависит от сотрудника | 100% |
-| 24/7 availability | ❌ | ✅ |
-| Priority calibration | Субъективна | Смещена в HIGH |
+### Complaint priority bias
+
+Оставшийся главный quality gap: модель все еще склонна завышать severity для части `complaint` кейсов.
+
+Типичный паттерн:
+- expected `medium`
+- actual `high`
+
+Что это значит practically:
+- кейс почти не ломает routing
+- но завышает urgency
+- значит workflow безопаснее запускать в pilot-режиме с human review, а не как fully autonomous triage
+
+---
+
+## Рекомендации на v1.3
+
+### P0
+
+1. **Complaint priority calibration**
+   - добавить explicit definition для `complaint: medium by default`
+   - оставить `high` только для жалоб с прямым operational impact
+   - добавить targeted few-shot examples
+
+2. **Canonical export of eval artifacts**
+   - сохранять row-level `eval_results.csv` после каждого run
+   - это упростит audit trail и сравнение версий
+
+### P1
+
+3. **Deterministic rule для very short / vague messages**
+   - если сообщение слишком короткое или явно ambiguous, принудительно ставить `needs_review = true`
+
+4. **Controlled pilot**
+   - прогнать workflow на реальных сообщениях
+   - собрать reviewer corrections
+   - сравнить AI output vs manual triage
+
+### P2
+
+5. **Reviewer feedback loop**
+   - логировать `reviewer_decision` и `final_category`
+   - использовать corrections как источник для следующих prompt iterations
+
+---
+
+## Go / No-Go
+
+**Решение:** `Go for controlled pilot`
+
+Почему:
+- category и route уже на уровне, достаточном для pilot
+- review gate надежный
+- known issue по priority локализован и не скрыт
+- workflow не пытается отвечать клиенту от лица компании, а решает более безопасную задачу triage
+
+**Не go for full autonomous rollout**
+
+Почему:
+- priority calibration еще не достаточно стабильна
+- reviewer feedback loop пока не замкнут
+- нет evidence на реальных production-like сообщениях
 
 ---
 
 ## Итог
 
-**Система готова к pilot запуску** с одним условием: доработать промпт для priority перед production использованием. Category и routing accuracy (92%) превышает типичный человеческий baseline (~80%). Критические кейсы (data loss, security breach) обрабатываются корректно — human review всегда триггерится.
+`v1.2` уже доказывает, что workflow работает как AI-assisted triage system:
+- быстро
+- понятно
+- с измеримым качеством
+- с безопасным human-in-the-loop path
 
-Priority bias (46% accuracy) — известная проблема с чёткой причиной и понятным фиксом. Не блокирует запуск, но должна быть устранена в v1.1.
+Следующий шаг для усиления проекта уже не в “еще одном prompt tweak”, а в `controlled pilot + reviewer feedback capture`.

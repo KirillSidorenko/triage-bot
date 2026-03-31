@@ -7,37 +7,49 @@
       "category": "billing",
       "team": "Billing Team",
       "channel": "#support-billing",
-      "escalation": "Finance Manager"
+      "escalation": "Finance Manager",
+      "tracker_queue_production": "BILLING",
+      "tracker_queue_staging": "TBILLING"
     },
     {
       "category": "technical_issue",
       "team": "Engineering Support",
       "channel": "#support-engineering",
-      "escalation": "Engineering Lead"
+      "escalation": "Engineering Lead",
+      "tracker_queue_production": "ENGSUP",
+      "tracker_queue_staging": "TENGSUP"
     },
     {
       "category": "account_access",
       "team": "Account Security",
       "channel": "#support-accounts",
-      "escalation": "Security Team"
+      "escalation": "Security Team",
+      "tracker_queue_production": "ACCSEC",
+      "tracker_queue_staging": "TACCSEC"
     },
     {
       "category": "feature_request",
       "team": "Product Team",
       "channel": "#product-feedback",
-      "escalation": "Product Manager"
+      "escalation": "Product Manager",
+      "tracker_queue_production": "PRODUCT",
+      "tracker_queue_staging": "TPRODUCT"
     },
     {
       "category": "complaint",
       "team": "Customer Success",
       "channel": "#support-escalations",
-      "escalation": "CS Manager"
+      "escalation": "CS Manager",
+      "tracker_queue_production": "CSM",
+      "tracker_queue_staging": "TCSM"
     },
     {
       "category": "general_inquiry",
       "team": "General Support",
       "channel": "#support-general",
-      "escalation": "Support Lead"
+      "escalation": "Support Lead",
+      "tracker_queue_production": "GENSUP",
+      "tracker_queue_staging": "TGENSUP"
     }
   ],
   "priority_overrides": [
@@ -51,6 +63,8 @@
   "fallback": {
     "route": "General Support",
     "channel": "#support-general",
-    "reason": "API error, parse failure, or unrecognized category"
+    "reason": "API error, parse failure, or unrecognized category",
+    "tracker_queue_production": "SUPREV",
+    "tracker_queue_staging": "TSUPREV"
   }
 }

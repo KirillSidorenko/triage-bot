@@ -3,613 +3,543 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Triage Bot — Кейс</title>
+  <title>AI Triage Bot — автоматизация triage поддержки</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --color-bg: #ffffff;
+      --color-bg-subtle: #f7f7f5;
+      --color-text: #1a1a1a;
+      --color-text-secondary: #6b6b6b;
+      --color-border: #e5e5e5;
+      --color-placeholder: #eeeeee;
+
+      --text-display: 64px;
+      --text-h2: 36px;
+      --text-h3: 24px;
+      --text-body: 18px;
+      --text-meta: 13px;
+
+      --lh-display: 1.05;
+      --lh-heading: 1.2;
+      --lh-body: 1.6;
+      --lh-meta: 1.4;
+
+      --fw-normal: 400;
+      --fw-medium: 500;
+
+      --ls-heading: -0.01em;
+      --ls-meta: 0.02em;
+
+      --space-xs: 8px;
+      --space-sm: 16px;
+      --space-md: 24px;
+      --space-lg: 48px;
+      --space-xl: 96px;
+      --space-section: 96px;
+
+      --max-prose: 900px;
+      --max-grid: 1200px;
+      --page-padding: 80px;
+
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --duration-reveal: 400ms;
+      --duration-hover: 180ms;
+
+      --radius-sm: 2px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #111111;
+        --color-bg-subtle: #1a1a1a;
+        --color-text: #f0f0f0;
+        --color-text-secondary: #8a8a8a;
+        --color-border: #2a2a2a;
+        --color-placeholder: #222222;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      :root {
+        --page-padding: 48px;
+        --space-section: 80px;
+      }
+    }
+
+    @media (max-width: 767px) {
+      :root {
+        --text-display: 40px;
+        --text-h2: 28px;
+        --text-h3: 20px;
+        --page-padding: 24px;
+        --space-section: 64px;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      scroll-behavior: smooth;
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #1a1a1a;
-      background: #fff;
-      line-height: 1.6;
+      font-family: 'Manrope', system-ui, sans-serif;
+      font-size: var(--text-body);
+      font-weight: var(--fw-normal);
+      line-height: var(--lh-body);
+      color: var(--color-text);
+      background-color: var(--color-bg);
     }
 
-    /* HEADER */
-    header {
-      background: #0f172a;
-      color: #fff;
-      padding: 64px 24px;
-      text-align: center;
-    }
+    img, video { display: block; max-width: 100%; height: auto; }
+    a { color: inherit; text-decoration: none; }
 
-    header .label {
-      display: inline-block;
-      background: #334155;
-      color: #94a3b8;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 20px;
-    }
-
-    header h1 {
-      font-size: clamp(28px, 5vw, 48px);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 16px;
-    }
-
-    header p {
-      font-size: 18px;
-      color: #94a3b8;
-      max-width: 560px;
-      margin: 0 auto 32px;
-    }
-
-    .meta {
-      display: flex;
-      justify-content: center;
-      gap: 32px;
-      flex-wrap: wrap;
-    }
-
-    .meta span {
-      font-size: 14px;
-      color: #64748b;
-    }
-
-    .meta span strong {
-      color: #cbd5e1;
-      font-weight: 600;
-    }
-
-    /* METRICS STRIP */
-    .metrics {
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 40px 24px;
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .metric-card {
-      padding: 20px;
-    }
-
-    .metric-card .value {
-      font-size: 36px;
-      font-weight: 700;
-      color: #0f172a;
-      letter-spacing: -0.02em;
-    }
-
-    .metric-card .value.good { color: #16a34a; }
-    .metric-card .value.warn { color: #d97706; }
-
-    .metric-card .label {
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 4px;
-    }
-
-    /* CONTENT */
-    .container {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    section {
-      padding: 56px 0;
-      border-bottom: 1px solid #f1f5f9;
-    }
-
-    section:last-child { border-bottom: none; }
-
-    h2 {
-      font-size: 22px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 20px;
-      letter-spacing: -0.01em;
-    }
-
-    h3 {
-      font-size: 16px;
-      font-weight: 600;
-      color: #334155;
-      margin: 24px 0 10px;
-    }
-
-    p { color: #374151; margin-bottom: 16px; }
+    h1, h2, h3 { font-weight: var(--fw-medium); letter-spacing: var(--ls-heading); }
+    h1 { font-size: var(--text-display); line-height: var(--lh-display); }
+    h2 { font-size: var(--text-h2); line-height: var(--lh-heading); margin-bottom: var(--space-md); }
+    h3 { font-size: var(--text-h3); line-height: var(--lh-heading); margin-bottom: var(--space-sm); }
+    p { margin-bottom: var(--space-sm); }
     p:last-child { margin-bottom: 0; }
 
-    /* CALLOUT */
-    .callout {
-      background: #eff6ff;
-      border-left: 3px solid #3b82f6;
-      padding: 16px 20px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-      font-size: 15px;
-      color: #1e40af;
+    /* Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--duration-reveal) var(--ease),
+                  transform var(--duration-reveal) var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Header */
+    .site-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: var(--space-sm) var(--page-padding);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background-color var(--duration-hover) var(--ease),
+                  border-color var(--duration-hover) var(--ease);
+      border-bottom: 1px solid transparent;
+    }
+    .site-header.scrolled {
+      background-color: var(--color-bg);
+      border-bottom-color: var(--color-border);
+    }
+    .logo { font-size: var(--text-body); font-weight: var(--fw-medium); letter-spacing: var(--ls-heading); }
+    .site-header nav { display: flex; align-items: center; gap: var(--space-md); }
+    .site-header nav a {
+      font-size: var(--text-meta); color: var(--color-text-secondary);
+      letter-spacing: var(--ls-meta); transition: color var(--duration-hover) var(--ease);
+    }
+    .site-header nav a:hover { color: var(--color-text); }
+
+    .menu-toggle {
+      display: none; background: none; border: none;
+      cursor: pointer; padding: var(--space-xs); color: var(--color-text);
+    }
+    .menu-toggle span {
+      display: block; width: 20px; height: 1.5px; background: currentColor; margin: 5px 0;
+      transition: transform var(--duration-hover) var(--ease), opacity var(--duration-hover) var(--ease);
+    }
+    .mobile-overlay {
+      display: none; position: fixed; inset: 0; z-index: 99;
+      background-color: var(--color-bg);
+      flex-direction: column; align-items: center; justify-content: center; gap: var(--space-lg);
+    }
+    .mobile-overlay.open { display: flex; }
+    .mobile-overlay a { font-size: var(--text-h3); font-weight: var(--fw-medium); }
+
+    @media (max-width: 767px) {
+      .site-header nav { display: none; }
+      .menu-toggle { display: block; }
     }
 
-    /* LIST */
-    ul {
-      list-style: none;
-      padding: 0;
+    /* Layout */
+    .page-content { padding-top: 64px; }
+    .section { padding: var(--space-section) var(--page-padding); }
+    .prose { max-width: var(--max-prose); margin: 0 auto; }
+    .wide { max-width: var(--max-grid); margin: 0 auto; }
+
+    /* Hero */
+    .hero { padding: var(--space-xl) var(--page-padding) var(--space-lg); }
+    .hero h1 { margin-bottom: var(--space-md); }
+    .hero-sub {
+      font-size: var(--text-body); color: var(--color-text-secondary);
+      max-width: 560px; line-height: var(--lh-body);
+    }
+    .hero-meta {
+      display: flex; gap: var(--space-lg); flex-wrap: wrap;
+      margin-top: var(--space-lg);
+    }
+    .hero-meta-item {}
+    .hero-meta-label {
+      font-size: var(--text-meta); color: var(--color-text-secondary);
+      letter-spacing: var(--ls-meta); line-height: var(--lh-meta);
+    }
+    .hero-meta-value {
+      font-size: var(--text-body); font-weight: var(--fw-medium);
+      margin-top: 2px;
     }
 
-    ul li {
-      padding: 8px 0 8px 20px;
-      position: relative;
-      color: #374151;
-      border-bottom: 1px solid #f8fafc;
+    /* Metrics strip */
+    .metrics-strip {
+      padding: var(--space-lg) var(--page-padding);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .metrics-row {
+      display: flex; justify-content: center; gap: var(--space-lg);
+      flex-wrap: wrap; max-width: var(--max-grid); margin: 0 auto;
+    }
+    .metric-item { text-align: center; }
+    .metric-value {
+      font-size: var(--text-h2); font-weight: var(--fw-medium);
+      line-height: var(--lh-heading); letter-spacing: var(--ls-heading);
+    }
+    .metric-label {
+      font-size: var(--text-meta); color: var(--color-text-secondary);
+      letter-spacing: var(--ls-meta); line-height: var(--lh-meta); margin-top: 4px;
     }
 
-    ul li:last-child { border-bottom: none; }
-
-    ul li::before {
-      content: '→';
-      position: absolute;
-      left: 0;
-      color: #94a3b8;
-      font-size: 13px;
+    /* Demo GIF */
+    .demo-section { padding: var(--space-section) var(--page-padding) 0; }
+    .demo-section img { border-radius: var(--radius-sm); }
+    .caption {
+      font-size: var(--text-meta); color: var(--color-text-secondary);
+      line-height: var(--lh-meta); margin-top: var(--space-sm);
     }
 
-    /* TABLE */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 14px;
+    /* Before / After */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);
+    }
+    .compare-col { padding-top: var(--space-md); border-top: 1px solid var(--color-border); }
+    .compare-label {
+      font-size: var(--text-meta); color: var(--color-text-secondary);
+      letter-spacing: var(--ls-meta); text-transform: uppercase;
+      margin-bottom: var(--space-sm);
+    }
+    .compare-col ul { list-style: none; padding: 0; }
+    .compare-col li {
+      padding: var(--space-xs) 0;
+      border-bottom: 1px solid var(--color-border);
+      font-size: var(--text-body);
+    }
+    .compare-col li:last-child { border-bottom: none; }
+
+    @media (max-width: 767px) {
+      .compare-grid { grid-template-columns: 1fr; }
     }
 
+    /* Pipeline + screenshots */
+    .interactive-demo {
+      border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+      overflow: hidden; margin-bottom: var(--space-lg);
+    }
+    .demo-header {
+      display: flex; align-items: center; gap: 6px;
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg-subtle);
+    }
+    .demo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-border); }
+    .demo-title {
+      font-size: var(--text-meta); color: var(--color-text-secondary);
+      letter-spacing: var(--ls-meta); margin-left: var(--space-xs);
+    }
+    .demo-body { padding: var(--space-md); overflow-x: auto; }
+    .demo-body pre {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px; line-height: 1.8; color: var(--color-text-secondary); white-space: pre;
+    }
+    .demo-body pre .hl { color: var(--color-text); font-weight: var(--fw-medium); }
+
+    .screenshots-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);
+    }
+    .screenshot-item img {
+      width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--color-border);
+    }
+    .screenshot-item .caption { text-align: center; }
+
+    @media (max-width: 767px) {
+      .screenshots-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin: var(--space-md) 0; }
     th {
-      background: #f8fafc;
-      text-align: left;
-      padding: 10px 14px;
-      font-weight: 600;
-      color: #475569;
-      border-bottom: 2px solid #e2e8f0;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      text-align: left; padding: var(--space-sm) 0;
+      font-size: var(--text-meta); font-weight: var(--fw-medium);
+      color: var(--color-text-secondary); letter-spacing: var(--ls-meta);
+      border-bottom: 1px solid var(--color-border);
     }
-
-    td {
-      padding: 12px 14px;
-      border-bottom: 1px solid #f1f5f9;
-      color: #374151;
-    }
-
+    td { padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border); }
+    td:not(:first-child), th:not(:first-child) { padding-left: var(--space-md); }
     tr:last-child td { border-bottom: none; }
-
-    td.good { color: #16a34a; font-weight: 600; }
-    td.warn { color: #d97706; font-weight: 600; }
-
-    /* ARCHITECTURE */
-    .arch {
-      background: #0f172a;
-      border-radius: 12px;
-      padding: 28px;
-      margin: 20px 0;
-      overflow-x: auto;
+    @media (max-width: 767px) {
+      td, th { font-size: 14px; padding: 12px 0; }
+      td:not(:first-child), th:not(:first-child) { padding-left: var(--space-sm); }
     }
 
-    .arch pre {
-      color: #94a3b8;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 13px;
-      line-height: 1.8;
-      white-space: pre;
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--color-border);
+      padding: var(--space-lg) var(--page-padding);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: var(--space-sm);
     }
-
-    .arch pre .hl { color: #38bdf8; }
-    .arch pre .ok { color: #4ade80; }
-    .arch pre .warn { color: #fbbf24; }
-
-    /* DECISIONS */
-    .decision {
-      background: #fafafa;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 20px 24px;
-      margin: 16px 0;
+    .footer-links { display: flex; gap: var(--space-md); }
+    .footer-links a, .footer-copy {
+      font-size: var(--text-meta); color: var(--color-text-secondary);
+      letter-spacing: var(--ls-meta); line-height: var(--lh-meta);
     }
-
-    .decision .q {
-      font-weight: 600;
-      color: #0f172a;
-      margin-bottom: 8px;
-      font-size: 15px;
-    }
-
-    .decision .a {
-      color: #4b5563;
-      font-size: 14px;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    /* STACK TAGS */
-    .stack {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .tag {
-      background: #f1f5f9;
-      color: #475569;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 4px 12px;
-      border-radius: 20px;
-      border: 1px solid #e2e8f0;
-    }
-
-    /* NEXT STEPS */
-    .roadmap {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-
-    .roadmap-item {
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 20px;
-    }
-
-    .roadmap-item .version {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #94a3b8;
-      margin-bottom: 8px;
-    }
-
-    .roadmap-item h4 {
-      font-size: 15px;
-      font-weight: 600;
-      color: #0f172a;
-      margin-bottom: 10px;
-    }
-
-    .roadmap-item ul li {
-      font-size: 13px;
-      padding: 4px 0 4px 16px;
-    }
-
-    /* SCREENSHOTS */
-    .screenshot {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      margin: 20px 0 6px;
-      display: block;
-    }
-
-    .screenshot-caption {
-      text-align: center;
-      font-size: 12px;
-      color: #94a3b8;
-      margin-bottom: 20px;
-    }
-
-    .screenshots-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 20px 0;
-    }
-
-    @media (max-width: 600px) {
-      .screenshots-row { grid-template-columns: 1fr; }
-    }
-
-    /* JSON OUTPUT */
-    .code-output {
-      background: #0f172a;
-      border-radius: 10px;
-      padding: 20px 24px;
-      margin: 20px 0;
-      overflow-x: auto;
-    }
-
-    .code-output pre {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 13px;
-      line-height: 1.8;
-      color: #94a3b8;
-      white-space: pre;
-    }
-
-    .code-output .key { color: #7dd3fc; }
-    .code-output .str { color: #86efac; }
-    .code-output .num { color: #fbbf24; }
-    .code-output .bool { color: #f9a8d4; }
-
-    /* FOOTER */
-    footer {
-      background: #f8fafc;
-      padding: 40px 24px;
-      text-align: center;
-      border-top: 1px solid #e2e8f0;
-    }
-
-    footer a {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #0f172a;
-      color: #fff;
-      text-decoration: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-
-    footer a:hover { background: #1e293b; }
-
-    footer p {
-      margin-top: 16px;
-      font-size: 13px;
-      color: #94a3b8;
-    }
+    .footer-links a:hover { color: var(--color-text); }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="label">Продуктовый кейс</div>
-  <h1>AI Triage Bot</h1>
-  <p>Автоматический триаж обращений в поддержку — классификация, приоритизация и маршрутизация за 3 секунды</p>
-  <div class="meta">
-    <span><strong>Стек</strong> Telegram · n8n · DeepSeek V3 · Google Sheets</span>
-    <span><strong>Срок</strong> 1 неделя, solo</span>
-    <span><strong>Роль</strong> AI Product Manager</span>
-  </div>
+<!-- 1. Header -->
+<header class="site-header">
+  <a href="#" class="logo">К. Сидоренко</a>
+  <nav>
+    <a href="https://github.com/KirillSidorenko/triage-bot" target="_blank">GitHub</a>
+    <a href="https://t.me/SidorenkoKirill" target="_blank">Telegram</a>
+  </nav>
+  <button class="menu-toggle" aria-label="Меню">
+    <span></span><span></span><span></span>
+  </button>
 </header>
+<div class="mobile-overlay" id="mobileMenu">
+  <a href="https://github.com/KirillSidorenko/triage-bot" target="_blank">GitHub</a>
+  <a href="https://t.me/SidorenkoKirill" target="_blank">Telegram</a>
+</div>
 
-<!-- METRICS -->
-<div class="metrics">
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="value good">92%</div>
-      <div class="label">Точность категоризации</div>
+<div class="page-content">
+
+  <!-- 2. Hero -->
+  <section class="hero">
+    <div class="wide">
+      <h1 class="reveal">AI Triage Bot</h1>
+      <p class="hero-sub reveal">Автоматизирует первичный разбор клиентских обращений: принимает сообщения в Telegram, определяет категорию и приоритет, создаёт тикет в Yandex Tracker и пишет лог в Google Sheets. Критичные и неоднозначные кейсы сразу передаёт на ручную проверку.</p>
+      <div class="hero-meta reveal">
+        <div class="hero-meta-item">
+          <div class="hero-meta-label">Входящий канал</div>
+          <div class="hero-meta-value">Telegram</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="hero-meta-label">Что на выходе</div>
+          <div class="hero-meta-value">Категория, приоритет, тикет, лог</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="hero-meta-label">Интеграции</div>
+          <div class="hero-meta-value">n8n, DeepSeek, Yandex Tracker, Google Sheets</div>
+        </div>
+      </div>
     </div>
-    <div class="metric-card">
-      <div class="value good">92%</div>
-      <div class="label">Точность маршрутизации</div>
-    </div>
-    <div class="metric-card">
-      <div class="value good">~3 сек</div>
-      <div class="label">Время обработки</div>
-    </div>
-    <div class="metric-card">
-      <div class="value good">$0.0001</div>
-      <div class="label">Стоимость тикета</div>
+  </section>
+
+  <!-- Metrics -->
+  <div class="metrics-strip reveal">
+    <div class="metrics-row">
+      <div class="metric-item">
+        <div class="metric-value">92%</div>
+        <div class="metric-label">Точность категории</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">92%</div>
+        <div class="metric-label">Точность маршрута</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">~3 сек</div>
+        <div class="metric-label">На обработку</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">$0.0001</div>
+        <div class="metric-label">Стоимость triage</div>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="container">
-
-  <!-- PROBLEM -->
-  <section>
-    <h2>Проблема</h2>
-    <p>Команды поддержки вручную читают, категоризируют, расставляют приоритеты и направляют каждое обращение. При 200+ тикетах в день этот процесс медленный, непоследовательный и дорогой.</p>
-    <ul>
-      <li><strong>3–5 минут на тикет</strong> тратится на триаж до начала реальной работы</li>
-      <li><strong>15–25% ошибок маршрутизации</strong> — тикеты уходят не в ту команду, возвращаются обратно</li>
-      <li><strong>Непоследовательность</strong> — приоритет и категория зависят от того, кто сейчас на смене</li>
-      <li><strong>Нет данных</strong> — никакой структурированной аналитики о том, что приходит и почему</li>
-    </ul>
-    <div class="callout">
-      Цена не только во времени. Критическое обращение — утечка данных, взлом — может остаться незамеченным, пока команда разбирает рутину.
+  <!-- Demo GIF -->
+  <section class="demo-section reveal">
+    <div class="wide">
+      <video autoplay muted loop playsinline poster="demo/web/EasyCase-hero-poster.jpg" aria-label="AI Triage Bot — полный цикл">
+        <source src="demo/web/EasyCase-hero-1280.mp4" type="video/mp4">
+      </video>
+      <p class="caption">Сообщение клиента → AI triage → тикет в Yandex Tracker → лог в Google Sheets → ручная проверка для рискованных кейсов</p>
     </div>
   </section>
 
-  <!-- SOLUTION -->
-  <section>
-    <h2>Решение</h2>
-    <p>AI-пайплайн для триажа, который обрабатывает каждое входящее сообщение за ~3 секунды и направляет в нужную команду — с ревьюером в контуре для критических случаев.</p>
-
-    <div class="arch">
-      <pre><span class="hl">Telegram</span> → Normalize → <span class="hl">DeepSeek V3</span> → Parse → Validate Output
-                                                          │
-                            ┌─────────────────────────────┴──────────────────────┐
-                  <span class="ok">confidence ≥ 0.8                               </span><span class="warn">confidence &lt; 0.8 или critical</span>
-                            │                                                    │
-                  <span class="ok">Авто-маршрут</span> → Google Sheets → Confirm      <span class="warn">Human Review</span> → Sheets → Notify</pre>
-    </div>
-
-    <img src="demo/screenshots/n8n-workflow.png" alt="n8n workflow" class="screenshot">
-    <p class="screenshot-caption">n8n workflow — 10 нод, полный пайплайн от Telegram до Google Sheets</p>
-
-    <h3>Как работает</h3>
-    <ul>
-      <li><strong>Intake</strong> — пользователь отправляет сообщение в Telegram-бот</li>
-      <li><strong>Классификация</strong> — DeepSeek V3 возвращает структурированный JSON: summary, category, priority, confidence, route</li>
-      <li><strong>Маршрутизация</strong> — высокий confidence → авто-роутинг; низкий confidence и все critical → ревьюер с AI-контекстом</li>
-      <li><strong>Логирование</strong> — каждое решение записывается в Google Sheets с полным audit trail</li>
-    </ul>
-
-    <h3>Пример вывода модели</h3>
-    <div class="code-output"><pre>{
-  <span class="key">"summary"</span>:    <span class="str">"Клиент сообщает о двойном списании за подписку, требует возврата"</span>,
-  <span class="key">"category"</span>:   <span class="str">"billing"</span>,
-  <span class="key">"priority"</span>:   <span class="str">"high"</span>,
-  <span class="key">"confidence"</span>: <span class="num">0.96</span>,
-  <span class="key">"route"</span>:      <span class="str">"Billing Team"</span>,
-  <span class="key">"needs_review"</span>: <span class="bool">false</span>
-}</pre></div>
-
-    <h3>В действии</h3>
-    <img src="demo/screenshots/demo.gif" alt="Демо: Telegram → n8n → Google Sheets" class="screenshot">
-    <p class="screenshot-caption">Полный пайплайн: сообщение в Telegram → классификация → строка появляется в Google Sheets</p>
-
-    <div class="screenshots-row">
-      <div>
-        <img src="demo/screenshots/telegram-billing.png" alt="Billing кейс" class="screenshot">
-        <p class="screenshot-caption">Billing кейс — авто-маршрут в Billing Team, confidence: 0.96</p>
-      </div>
-      <div>
-        <img src="demo/screenshots/telegram-human-review.png" alt="Critical кейс" class="screenshot">
-        <p class="screenshot-caption">Critical кейс (взлом) — передаётся ревьюеру с AI-контекстом</p>
-      </div>
-    </div>
-
-    <div class="stack">
-      <span class="tag">Telegram Bot API</span>
-      <span class="tag">n8n (self-hosted)</span>
-      <span class="tag">DeepSeek V3</span>
-      <span class="tag">Google Sheets</span>
-      <span class="tag">LangChain (n8n)</span>
-    </div>
-  </section>
-
-  <!-- RESULTS -->
-  <section>
-    <h2>Результаты оценки</h2>
-    <p>Прогон на 50 синтетических кейсах: 6 категорий, RU/EN, включая edge cases — очень короткие, многотемные, размытые, критические.</p>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Метрика</th>
-          <th>Результат</th>
-          <th>Цель</th>
-          <th>vs. ручной триаж</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Точность категоризации</td><td class="good">92%</td><td>85%</td><td class="good">+12pp от ~80%</td></tr>
-        <tr><td>Точность маршрутизации</td><td class="good">92%</td><td>85%</td><td class="good">+12pp</td></tr>
-        <tr><td>Триггер human review</td><td class="good">94%</td><td>85%</td><td>—</td></tr>
-        <tr><td>Точность приоритета</td><td class="warn">76%</td><td>70%</td><td class="good">+30pp за 2 итерации</td></tr>
-        <tr><td>Время обработки</td><td class="good">~3 сек</td><td>&lt;10 сек</td><td class="good">vs. 3–5 минут</td></tr>
-        <tr><td>Стоимость тикета</td><td class="good">$0.0001</td><td>—</td><td class="good">vs. ~$0.50–2</td></tr>
-      </tbody>
-    </table>
-
-    <div class="callout">
-      <strong>Итерационное улучшение:</strong> priority accuracy 46% → 76% за 2 итерации промпт-инжиниринга. Feature_request: 0% → 86% после явного правила в определении. Открытая проблема: complaint priority — модель смещает medium → high (v1.3).
-    </div>
-
-    <div class="screenshots-row">
-      <div>
-        <img src="demo/screenshots/triage-log.png" alt="Triage Log" class="screenshot">
-        <p class="screenshot-caption">Triage Log — каждое обращение с полным audit trail</p>
-      </div>
-      <div>
-        <img src="demo/screenshots/eval-dashboard.png" alt="Eval Dashboard" class="screenshot">
-        <p class="screenshot-caption">Eval Dashboard — результаты на 50 кейсах</p>
+  <!-- 3. До / После -->
+  <section class="section reveal">
+    <div class="wide">
+      <h2>Какую задачу решает</h2>
+      <div class="compare-grid">
+        <div class="compare-col">
+          <div class="compare-label">Без автоматизации</div>
+          <ul>
+            <li>Оператор вручную читает и сортирует каждое обращение</li>
+            <li>Маршрут и приоритет зависят от конкретной смены</li>
+            <li>Критичные кейсы легко потерять в общем потоке</li>
+            <li>История разбора расползается по чатам и таблицам</li>
+            <li>Рост объёма обращений требует больше ручной работы</li>
+          </ul>
+        </div>
+        <div class="compare-col">
+          <div class="compare-label">AI Triage Bot</div>
+          <ul>
+            <li>Обращение разбирается за секунды, а не за минуты</li>
+            <li>6 фиксированных категорий и детерминированная маршрутизация</li>
+            <li>Тикет в трекере и лог в Google Sheets создаются сразу</li>
+            <li>Critical и low-confidence не отдаются автоматике</li>
+            <li>Команда получает уже разобранный и приоритизированный поток</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- DECISIONS -->
-  <section>
-    <h2>Ключевые решения</h2>
+  <!-- 4. Как работает -->
+  <section class="section reveal">
+    <div class="wide">
+      <h2>Что входит в решение</h2>
+      <p class="prose">Решение уже умеет принимать обращения из Telegram, нормализовывать сообщение, классифицировать его в одну из 6 категорий, рассчитывать приоритет и confidence, создавать тикет в Yandex Tracker и записывать результат в Google Sheets.</p>
 
-    <div class="decision">
-      <div class="q">Почему порог confidence, а не полная автоматизация?</div>
-      <p class="a">При пороге 0.8 около 85% тикетов маршрутизируются автоматически с приемлемым качеством. Оставшиеся 15% идут к ревьюеру — с AI-сгенерированным summary и классификацией как контекстом. Для критических случаев (утечка данных, взлом) human review обязателен независимо от confidence. Это human augmentation, не replacement.</p>
-    </div>
+      <div class="interactive-demo">
+        <div class="demo-header">
+          <span class="demo-dot"></span>
+          <span class="demo-dot"></span>
+          <span class="demo-dot"></span>
+          <span class="demo-title">Пайплайн</span>
+        </div>
+        <div class="demo-body">
+          <pre><span class="hl">Telegram</span> → Normalize → <span class="hl">DeepSeek V3</span> → Parse → Validate
+                                                    │
+                    confidence ≥ 0.8          confidence &lt; 0.8
+                    и not critical            или critical
+                              │                         │
+                    <span class="hl">Target queue</span>              <span class="hl">Review queue</span></pre>
+        </div>
+      </div>
 
-    <div class="decision">
-      <div class="q">Почему DeepSeek V3, а не GPT-4o?</div>
-      <p class="a">Прямой доступ из России, OpenAI-совместимый интерфейс (нулевые затраты на миграцию) и ~10x дешевле GPT-4o при цене $0.028/1M токенов. Классификация одного тикета стоит ~$0.0001. Eval-сет спроектирован так, чтобы его можно было прогнать на нескольких моделях для сравнения.</p>
-    </div>
-
-    <div class="decision">
-      <div class="q">Почему Google Sheets, а не база данных?</div>
-      <p class="a">Нулевые накладные расходы на инфраструктуру. Ops-команда уже использует его. Postgres добавит сложность без добавления ценности на текущем этапе. Sheets можно заменить в v2, не трогая логику классификации — чистое разделение ответственности.</p>
-    </div>
-
-    <div class="decision">
-      <div class="q">Почему n8n, а не кастомный код?</div>
-      <p class="a">Быстрее строить, проще передать. Нетехнический ops-менеджер может прочитать workflow, понять его и изменить правила маршрутизации без разработчика. Снижает зависимость от инженеров при повседневных изменениях.</p>
+      <div class="screenshots-grid">
+        <div class="screenshot-item">
+          <img src="demo/screenshots/telegram-billing.png" alt="Автоматическая маршрутизация">
+          <p class="caption">Авто-маршрут: confident non-critical обращение сразу уходит в профильную очередь</p>
+        </div>
+        <div class="screenshot-item">
+          <img src="demo/screenshots/telegram-human-review.png" alt="Human review">
+          <p class="caption">Ручная проверка: `critical` или `confidence &lt; 0.8` уходят в review queue и reviewer-уведомление</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- LEARNINGS -->
-  <section>
-    <h2>Выводы</h2>
+  <!-- 5. Результаты -->
+  <section class="section reveal">
+    <div class="prose">
+      <h2>Что уже проверено</h2>
+      <p>В проекте есть отдельный eval workflow и рабочий benchmark-набор из 55 размеченных RU/EN кейсов: 50 из последнего canonical run и 5 regression-добавлений для billing/login boundary checks. Таблица ниже — это последний измеренный score canonical run от 12 марта 2026; после синхронизации benchmark expectations нужен следующий полный rerun.</p>
 
-    <h3>Модель может ошибаться уверенно</h3>
-    <p>4 из 50 ошибок классификации произошли при confidence ≥ 0.9. Именно поэтому слой human review существует — не только для неопределённых случаев, но и как страховка от высокоуверенных ошибок. Confidence score — полезный сигнал, но не гарантия.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Метрика</th>
+            <th>Сейчас</th>
+            <th>Что это даёт</th>
+            <th>Контекст</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Категория</td><td>92%</td><td>Стабильный первичный triage</td><td>Последний 50-case canonical run</td></tr>
+          <tr><td>Маршрут</td><td>92%</td><td>Обращение попадает в нужную команду</td><td>6 фиксированных категорий</td></tr>
+          <tr><td>Human review trigger</td><td>94%</td><td>Рискованные кейсы не уходят в full auto</td><td>`critical` или `confidence &lt; 0.8`</td></tr>
+          <tr><td>Приоритет</td><td>76%</td><td>Есть база для SLA и очередей</td><td>Сложнейшая метрика в кейсе</td></tr>
+          <tr><td>Время</td><td>~3 сек</td><td>Поддержка не тратит минуты на сортировку</td><td>Вместо 3-5 минут вручную</td></tr>
+          <tr><td>Стоимость</td><td>$0.0001</td><td>Масштабирование не упирается в LLM-бюджет</td><td>С текущей DeepSeek-конфигурацией</td></tr>
+        </tbody>
+      </table>
 
-    <h3>Фиксированные категории предотвращают дрейф таксономии</h3>
-    <p>Жёсткий список из 6 категорий в системном промпте не позволил модели придумывать собственную схему классификации. Без этого ограничения LLM склонны создавать непоследовательные, перекрывающиеся категории, которые ломают логику маршрутизации.</p>
-
-    <h3>Eval до продакшена, не после</h3>
-    <p>Структурированная оценка обнаружила смещение в приоритетах до запуска. Без неё система вышла бы в продакшен с известным дефектом — который обнаружился бы только через жалобы пользователей, а не метрики.</p>
+      <p>Главное ограничение текущего кейса видно прямо в eval-логике: приоритет для `complaint` всё ещё может завышаться. Это не ломает маршрутизацию, но остаётся точкой следующей продуктовой итерации.</p>
+    </div>
   </section>
 
-  <!-- NEXT STEPS -->
-  <section>
-    <h2>Следующие шаги</h2>
-    <div class="roadmap">
-      <div class="roadmap-item">
-        <div class="version">v1.1 · Сейчас</div>
-        <h4>Доработка промпта</h4>
-        <ul>
-          <li>Калибровка приоритетов</li>
-          <li>Явные примеры для «low»</li>
-          <li>Короткое сообщение → авто-ревью</li>
-        </ul>
-      </div>
-      <div class="roadmap-item">
-        <div class="version">v2 · Далее</div>
-        <h4>Мультиканальность</h4>
-        <ul>
-          <li>Email (Gmail/Outlook)</li>
-          <li>Авто-ответы для general_inquiry</li>
-          <li>Feedback loop ревьюеров</li>
-        </ul>
-      </div>
-      <div class="roadmap-item">
-        <div class="version">v3 · Потом</div>
-        <h4>Интеллект</h4>
-        <ul>
-          <li>Детекция дублей тикетов</li>
-          <li>Маршрут к конкретному агенту</li>
-          <li>Прогноз времени решения</li>
-        </ul>
-      </div>
+  <!-- 6. Решения -->
+  <section class="section reveal">
+    <div class="prose">
+      <h2>Почему это внедряемо</h2>
+
+      <h3>Человек остаётся в контуре</h3>
+      <p>Система не пытается полностью заменить поддержку. `Critical` обращения и кейсы с низкой уверенностью модели всегда уходят на ручную проверку, поэтому автоматизация не повышает операционный риск.</p>
+
+      <h3>Маршрутизация не зависит от настроения смены</h3>
+      <p>В коде зафиксированы категории, очереди, fallback и правила boundary cases: broken existing behavior, access issues, billing-how-to, feature requests и complaint-сценарии. Это делает triage повторяемым и объяснимым.</p>
+
+      <h3>Качество можно улучшать без догадок</h3>
+      <p>В проекте уже есть eval workflow, логирование в Google Sheets и измеримые метрики качества. Значит, решение можно развивать по данным: видеть, где модель ошибается, и править prompt, routing rules или review-gate адресно.</p>
     </div>
   </section>
 
 </div>
 
-<footer>
-  <a href="https://github.com/KirillSidorenko/triage-bot" target="_blank">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-    Открыть на GitHub
-  </a>
-  <p>Кирилл Сидоренко · AI Product Manager · <a href="https://t.me/SidorenkoKirill" target="_blank" style="color:#94a3b8;">@SidorenkoKirill</a></p>
+<!-- 7. Footer -->
+<footer class="site-footer">
+  <div class="footer-links">
+    <a href="https://github.com/KirillSidorenko/triage-bot" target="_blank">GitHub</a>
+    <a href="https://t.me/SidorenkoKirill" target="_blank">Telegram</a>
+    <a href="mailto:kirill@sidorenko.io">Email</a>
+  </div>
+  <span class="footer-copy">2026 Кирилл Сидоренко</span>
 </footer>
+
+<script>
+  // Header scroll
+  const header = document.querySelector('.site-header');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        header.classList.toggle('scrolled', window.scrollY > 100);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '-10% 0px', threshold: 0 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Mobile menu
+  const toggle = document.querySelector('.menu-toggle');
+  const overlay = document.getElementById('mobileMenu');
+  toggle.addEventListener('click', () => {
+    const isOpen = overlay.classList.toggle('open');
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    const spans = toggle.querySelectorAll('span');
+    spans[0].style.transform = isOpen ? 'rotate(45deg) translate(4px, 4px)' : '';
+    spans[1].style.opacity = isOpen ? '0' : '';
+    spans[2].style.transform = isOpen ? 'rotate(-45deg) translate(4px, -4px)' : '';
+  });
+  overlay.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      toggle.querySelectorAll('span').forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
+    });
+  });
+</script>
 
 </body>
 </html>

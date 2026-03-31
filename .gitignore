@@ -12,6 +12,8 @@ Product-Manager-Skills/
 demo/demo_script.md
 demo/*.gif
 eval/eval_results.csv
+demo/tmp/
+Screenshot *.png
 
 # Unused screenshots
 demo/screenshots/sheets_check.png

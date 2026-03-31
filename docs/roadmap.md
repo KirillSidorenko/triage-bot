@@ -17,7 +17,7 @@
 - [x] v1.1 critical detection fix
 - [x] v1.2 priority calibration (`feature_request -> low`, few-shot examples)
 
-**Текущее измеренное состояние:** category 92%, routing 92%, priority 76%, review trigger 94%, latency ~3 сек.
+**Текущее измеренное состояние:** последний canonical run = category 92%, routing 92%, priority 76%, review trigger 94%, latency ~3 сек. Рабочий benchmark-набор уже расширен до 55 строк; свежий full rerun pending.
 
 ## Next (v1.3 — pilot hardening)
 
@@ -28,7 +28,7 @@
 - [ ] Complaint priority calibration (`medium` vs `high`)
 - [ ] Deterministic rule для very short / vague messages
 - [ ] Shadow mode vs manual triage
-- [ ] Canonical refresh of eval artifacts after next logic change
+- [ ] Full rerun after benchmark sync / next logic change
 - [ ] Обновлённые demo screenshots из Tracker-версии workflow
 
 ## Later (v2+)
